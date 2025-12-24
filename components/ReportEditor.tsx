@@ -102,6 +102,18 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
     return () => clearInterval(timer);
   }, [report]);
 
+  // Unsaved changes warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (report._syncState?.dirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [report._syncState?.dirty]);
+
   const saveDraft = async (silent = false) => {
     if (!silent) {
         setSaving(true);
@@ -496,7 +508,7 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
                         className="flex items-center text-xs font-bold uppercase tracking-wide bg-white text-brand-600 px-3 py-2 rounded border border-brand-200 hover:bg-brand-50 disabled:opacity-50 transition-colors shadow-sm"
                     >
                         {scanningNameplate ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-camera mr-2"></i>}
-                        {scanningNameplate ? 'Analzying...' : 'Scan Nameplate'}
+                        {scanningNameplate ? 'Analyzing...' : 'Scan Nameplate'}
                     </button>
                     <input type="file" accept="image/*" ref={nameplateInputRef} className="hidden" onChange={handleNameplateScan} />
                 </div>
