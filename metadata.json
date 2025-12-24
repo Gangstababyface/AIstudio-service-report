@@ -1,0 +1,9 @@
+{
+  "name": "XOVR Tools — Service Report Pro",
+  "description": "Professional service reporting tool for technicians with offline support, WorkDrive integration, and AI assistance.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
