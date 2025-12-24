@@ -1,55 +1,82 @@
-import { ServiceReport, Issue, Attachment } from '../types';
+
+import { ServiceReport, Issue, Attachment, PartEntry } from '../types';
 
 export const generateHTML = (report: ServiceReport): string => {
+  const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6942d9eb36db1e00f69ccffb/ffd8b423f_xovr-logo.png";
+
   const css = `
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 20px; }
-    h1 { color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
-    h2 { background: #f4f4f4; padding: 10px; border-left: 5px solid #0056b3; margin-top: 30px; }
-    h3 { color: #444; margin-top: 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    .label { font-weight: bold; color: #555; }
-    .value { margin-bottom: 5px; }
-    .issue-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-    .issue-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
-    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
-    .resolved { background: #d4edda; color: #155724; }
-    .unresolved { background: #f8d7da; color: #721c24; }
-    .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
-    .img-container { text-align: center; }
-    img { max-width: 100%; border: 1px solid #ccc; padding: 2px; }
-    .file-block { border: 1px dashed #ccc; padding: 10px; text-align: center; font-size: 0.8em; background: #f9f9f9; word-break: break-all; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: #262626; color: white; padding: 30px; border-bottom: 4px solid #B91C1C; }
+    .logo { height: 60px; margin-bottom: 15px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+    .meta-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 30px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    .meta-item { }
+    .meta-item label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; display: block; margin-bottom: 4px; }
+    .meta-item span { font-weight: 600; color: #1e293b; }
+    .summary { padding: 20px 30px; border-bottom: 1px solid #e2e8f0; }
+    .summary h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px; }
+    .summary p { color: #475569; font-size: 14px; white-space: pre-wrap; }
+    .issues { padding: 20px 30px; }
+    .issues > h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 20px; }
+    .issue { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; page-break-inside: avoid; }
+    .issue-header { background: #f8fafc; padding: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e2e8f0; }
+    .issue-number { background: #1e293b; color: white; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .issue-title { font-weight: 600; flex: 1; font-size: 14px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+    .badge.resolved { background: #dcfce7; color: #166534; }
+    .badge.unresolved { background: #fef3c7; color: #92400e; }
+    .issue-meta { padding: 10px 15px; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
+    .category { font-size: 12px; color: #64748b; font-weight: 500; text-transform: uppercase; }
+    .section { padding: 15px; border-top: 1px solid #f1f5f9; }
+    .issue-meta + .section { border-top: none; }
+    .section h4 { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 10px; }
+    .section p { color: #64748b; font-size: 14px; margin-bottom: 8px; white-space: pre-wrap; }
+    .section ol { padding-left: 20px; }
+    .section ul { padding-left: 20px; }
+    .section li { margin-bottom: 8px; color: #475569; font-size: 13px; }
+    .section table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .section th, .section td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+    .section th { background: #f8fafc; font-weight: 600; color: #64748b; }
+    .section.warning { background: #fef3c7; }
+    .section.follow-up { background: #dbeafe; }
+    .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; margin-bottom: 8px; }
+    .photo-item { border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: white; }
+    .photo-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .photo-title { font-weight: 600; color: #1e293b; padding: 8px 12px 0 12px; margin: 0; font-size: 12px; }
+    .caption { color: #64748b; padding: 4px 12px 8px 12px; margin: 0; font-size: 11px; }
+    .footer { padding: 20px 30px; background: #f8fafc; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+    .parts-global { margin-top: 30px; padding: 0 30px 30px 30px; }
+    .parts-global h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 15px; }
+    @media print { body { background: white; padding: 0; } .container { box-shadow: none; max-width: 100%; } .issue { page-break-inside: avoid; } }
   `;
 
-  // Helper to render attachment images OR file blocks
+  // Helper to render attachment images
   const renderAttachments = (attachments: Attachment[], filterFn?: (a: Attachment) => boolean) => {
     if (!attachments) return '';
-    // Safely filter: remove nulls/undefined first, then apply filterFn if exists
     const relevant = attachments.filter(a => !!a && (filterFn ? filterFn(a) : true));
     if (relevant.length === 0) return '';
     
-    // Check if web-safe image (jpeg, png, gif, webp)
     const isWebImage = (type: string) => /image\/(jpeg|png|gif|webp|bmp)/i.test(type);
 
     return `
-      <div class="img-grid">
+      <div class="photos">
         ${relevant.map(a => {
             if (isWebImage(a.fileType) || (a.data && a.data.startsWith('data:image/'))) {
-                // Render as Image
                 return `
-                    <div class="img-container">
-                        <img src="${a.data || a.url || ''}" alt="${a.fileName || 'Image'}" loading="lazy" />
-                        <div style="font-size:0.7em; color:#777;">${a.fileName || ''}</div>
+                    <div class="photo-item">
+                        <img src="${a.data || a.url || ''}" alt="${a.fileName || 'Image'}" />
+                        ${a.caption ? `<p class="caption">${a.caption}</p>` : ''}
                     </div>
                 `;
             } else {
-                // Render as File Block
                 return `
-                    <div class="file-block">
-                        <strong>FILE:</strong><br/>
-                        ${a.fileName || 'Unknown File'}
+                    <div class="photo-item" style="display:flex; align-items:center; justify-content:center; height:140px; background:#f9f9f9; color:#666; font-size:12px; padding:10px; text-align:center;">
+                        <div>
+                           <strong>FILE</strong><br/>${a.fileName}
+                        </div>
                     </div>
                 `;
             }
@@ -58,93 +85,242 @@ export const generateHTML = (report: ServiceReport): string => {
     `;
   };
 
-  const renderIssue = (issue: Issue) => {
+  const renderPartsTable = (parts: PartEntry[]) => {
+      if (!parts || parts.length === 0) return '';
+      return `
+        <div class="section">
+          <h4>Parts / Consumables</h4>
+          <table>
+            <tr><th>Part #</th><th>Qty</th><th>Description</th><th>Notes</th></tr>
+            ${parts.map(p => `
+              <tr>
+                <td>${p.partNumber || '-'}</td>
+                <td>${p.quantity}</td>
+                <td>${p.description}</td>
+                <td>${p.notes || ''}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      `;
+  };
+
+  const renderIssue = (issue: Issue, index: number) => {
     if (!issue) return '';
     const atts = issue.attachments || [];
+    const isResolved = issue.resolved;
+    
+    // Filters for specific fields
+    const getFieldPhotos = (ref: string) => atts.filter(a => a.bucket === 'issue_photos' && a.fieldRef === ref);
+    // Fallback for legacy general issue photos or drag-dropped without specific field
+    const getGeneralPhotos = () => atts.filter(a => a.bucket === 'issue_photos' && !a.fieldRef);
+    
+    // Filter for other media buckets (Media Tab in modal)
+    const getBucketPhotos = (bucket: string) => atts.filter(a => a.bucket === bucket);
+    
+    const otherMediaBuckets = ['created_media', 'received_media', 'wechat', 'old_backup', 'new_backup', 'other'];
+    const hasOtherMedia = atts.some(a => otherMediaBuckets.includes(a.bucket));
+    
     return `
-    <div class="issue-card">
+    <div class="issue">
       <div class="issue-header">
-        <h3>${issue.title || 'Untitled'} <span style="font-size:0.8em; color:#666">(${issue.category || 'General'})</span></h3>
-        <span class="badge ${issue.resolved ? 'resolved' : 'unresolved'}">${issue.resolved ? 'RESOLVED' : 'OPEN'}</span>
+        <span class="issue-number">#${index + 1}</span>
+        <span class="issue-title">${issue.title || 'Untitled Issue'}</span>
+        <span class="badge ${isResolved ? 'resolved' : 'unresolved'}">
+          ${isResolved ? 'Resolved' : 'Unresolved'}
+        </span>
+      </div>
+      <div class="issue-meta">
+        <span class="category">${issue.category || 'General'}</span>
+        ${issue.urgency && !isResolved ? `<span style="float:right; font-size:11px; font-weight:bold; color:#b91c1c;">Priority: ${issue.urgency}</span>` : ''}
       </div>
       
-      <p><strong>Observation:</strong><br/>${issue.description || ''}</p>
-      ${renderAttachments(atts, a => a.bucket === 'issue_photos' && a.fieldRef === 'description')}
+      <div class="section">
+        <h4>Problem Description</h4>
+        ${renderAttachments(getFieldPhotos('issueTitle'))}
+        
+        <p>${issue.description || 'No description provided.'}</p>
+        ${renderAttachments(getFieldPhotos('description'))}
+        
+        ${/* Render general photos that aren't tied to a specific field */ ''}
+        ${renderAttachments(getGeneralPhotos())}
+
+        ${issue.troubleshootingSteps && issue.troubleshootingSteps.length > 0 ? `
+           <div style="margin-top: 15px;">
+             <strong>Troubleshooting Steps Taken:</strong>
+             <ol style="margin-top:5px;">
+               ${issue.troubleshootingSteps.map(s => `
+                 <li>
+                    ${s.text}
+                    ${renderAttachments(getFieldPhotos(s.id))}
+                 </li>
+               `).join('')}
+             </ol>
+           </div>
+        ` : ''}
+      </div>
+
+      ${isResolved ? `
+        <div class="section" style="background:#f8fafc;">
+          <h4>Resolution</h4>
+          ${issue.solutionSummary ? `
+             <div style="margin-bottom: 12px;">
+               <p><strong>Summary:</strong> ${issue.solutionSummary}</p>
+               ${renderAttachments(getFieldPhotos('solutionSummary'))}
+             </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 12px;">
+            <p><strong>Root Cause:</strong> ${issue.rootCause || 'Not recorded'}</p>
+            ${renderAttachments(getFieldPhotos('rootCause'))}
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <p><strong>Fix Applied:</strong> ${issue.fixApplied || 'Not recorded'}</p>
+            ${renderAttachments(getFieldPhotos('fixApplied'))}
+          </div>
+          
+          ${issue.verifiedBy ? `
+              <div style="margin-bottom: 12px;">
+                  <p><strong>Verified By:</strong> ${issue.verifiedBy}</p>
+                  ${renderAttachments(getFieldPhotos('verifiedBy'))}
+              </div>
+          ` : ''}
+
+          ${issue.notes ? `
+              <div style="margin-bottom: 12px;">
+                  <p><strong>Notes:</strong> ${issue.notes}</p>
+                  ${renderAttachments(getFieldPhotos('notes'))}
+              </div>
+          ` : ''}
+        </div>
+      ` : ''}
       
-      ${atts.length > 0 ? `
-         <div style="margin-top:10px;">
-           <strong>Other Issue Media:</strong>
-           ${renderAttachments(atts, a => !a.fieldRef)}
-         </div>
+      ${/* Show Proposed Fixes if unresolved or if they exist with photos */ !isResolved && issue.proposedFixes && issue.proposedFixes.length > 0 ? `
+          <div class="section">
+             <h4>Proposed Fixes</h4>
+             <ul>
+               ${issue.proposedFixes.map(f => `
+                 <li>
+                    ${f.text}
+                    ${renderAttachments(getFieldPhotos(f.id))}
+                 </li>
+               `).join('')}
+             </ul>
+          </div>
       ` : ''}
 
-      ${issue.resolved ? `
-        <div style="background:#f9f9f9; padding:10px; margin-top:10px;">
-          <h4>Resolution</h4>
-          <p><strong>Root Cause:</strong> ${issue.rootCause || ''}</p>
-          ${renderAttachments(atts, a => a.fieldRef === 'rootCause')}
-          
-          <p><strong>Fix Applied:</strong> ${issue.fixApplied || ''}</p>
-          ${renderAttachments(atts, a => a.fieldRef === 'fixApplied')}
-          
-          <p><strong>Verified By:</strong> ${issue.verifiedBy || ''}</p>
-          <p><strong>Summary:</strong> ${issue.solutionSummary || ''}</p>
+      ${renderPartsTable(issue.parts)}
+      
+      ${/* Render other buckets if they exist */ hasOtherMedia ? `
+        <div class="section">
+            <h4>Attached Media</h4>
+            ${otherMediaBuckets.map(b => {
+                const photos = getBucketPhotos(b);
+                if (photos.length === 0) return '';
+                const titleMap: Record<string, string> = {
+                    'created_media': 'Created Media',
+                    'received_media': 'Received Media',
+                    'wechat': 'WeChat Screenshots',
+                    'old_backup': 'Old Machine Backup',
+                    'new_backup': 'New Machine Backup',
+                    'other': 'Other Files'
+                };
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <h5 style="font-size: 12px; color: #64748b; margin-bottom: 5px; text-transform: uppercase;">${titleMap[b] || b}</h5>
+                        ${renderAttachments(photos)}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+      ` : ''}
+      
+      ${issue.followUpRequired ? `
+        <div class="section follow-up">
+           <h4>Follow-up Required</h4>
+           <p>This issue has been flagged for further attention from the office.</p>
         </div>
       ` : ''}
     </div>
   `};
 
   return `
-    <!DOCTYPE html>
-    <html>
-    <head><title>Service Report ${report.reportId || 'Draft'}</title><style>${css}</style></head>
-    <body>
-      <h1>Service Report: ${report.reportId || 'DRAFT'}</h1>
-      
-      <div class="grid">
-        <div>
-          <div class="label">Customer</div>
-          <div class="value">${report.customer?.companyName || ''}</div>
-          <div class="value">${report.customer?.address || ''}</div>
-          <div class="value">${report.customer?.contactPerson || ''} (${report.customer?.phone || ''})</div>
-        </div>
-        <div>
-          <div class="label">Service Details</div>
-          <div class="value"><strong>Tech:</strong> ${report.technicianName || ''}</div>
-          <div class="value"><strong>Date:</strong> ${report.arrivalDate || ''}</div>
-          <div class="value"><strong>Status:</strong> ${report.status || 'DRAFT'}</div>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Report - ${report.customer?.companyName || 'XOVR Tools'}</title>
+  <style>${css}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="${logoUrl}" alt="XOVR Tools Logo" class="logo" />
+      <h1>Service Report</h1>
+      <p>${report.customer?.companyName || ''} • ${report.machine?.modelNumber || 'Unknown Model'}</p>
+    </div>
+    
+    <div class="meta-section">
+      <div class="meta-item">
+        <label>Technician</label>
+        <span>${report.technicianName}</span>
       </div>
-
-      <h2>Machine Information</h2>
-      <div class="grid">
-        <div><span class="label">Model:</span> ${report.machine?.modelNumber || ''}</div>
-        <div><span class="label">Serial:</span> ${report.machine?.serialNumber || ''}</div>
-        <div><span class="label">Controller:</span> ${report.machine?.controllerType || ''}</div>
+      <div class="meta-item">
+        <label>Date</label>
+        <span>${report.arrivalDate}</span>
       </div>
-      ${renderAttachments(report.attachments || [], a => a.fieldRef === 'machineNameplate')}
+      <div class="meta-item">
+        <label>Customer Contact</label>
+        <span>${report.customer?.contactPerson || 'N/A'}</span>
+      </div>
+      <div class="meta-item">
+        <label>Machine Serial</label>
+        <span>${report.machine?.serialNumber || 'N/A'}</span>
+      </div>
+      <div class="meta-item">
+        <label>Report ID</label>
+        <span>${report.reportId || 'DRAFT'}</span>
+      </div>
+    </div>
+    
+    ${report.summary ? `
+      <div class="summary">
+        <h3>Summary / Reason for Visit</h3>
+        <p>${report.summary}</p>
+        ${renderAttachments(report.attachments, a => a.bucket === 'summary')}
+      </div>
+    ` : ''}
+    
+    <div class="issues">
+      <h3>Issues (${report.issues?.length || 0})</h3>
+      ${(report.issues || []).map((issue, idx) => renderIssue(issue, idx)).join('')}
+    </div>
 
-      <h2>Summary / Reason for Visit</h2>
-      <p>${report.summary || ''}</p>
-      ${renderAttachments(report.attachments || [], a => a.bucket === 'summary' && a.fieldRef !== 'machineNameplate')}
-
-      <h2>Issues & Resolutions</h2>
-      ${(report.issues || []).length === 0 ? '<p>No issues recorded.</p>' : (report.issues || []).filter(i => !!i).map(renderIssue).join('')}
-
-      <h2>Parts Used</h2>
-      ${(report.parts || []).length > 0 ? `
+    ${report.parts && report.parts.length > 0 ? `
+      <div class="parts-global">
+        <h3>General Parts Used (Not tied to specific issues)</h3>
         <table>
-          <thead><tr><th>Part #</th><th>Description</th><th>Qty</th><th>Notes</th></tr></thead>
-          <tbody>
-            ${report.parts.filter(p => !!p).map(p => `<tr><td>${p.partNumber || ''}</td><td>${p.description || ''}</td><td>${p.quantity || ''}</td><td>${p.notes || ''}</td></tr>`).join('')}
-          </tbody>
+            <tr><th>Part #</th><th>Qty</th><th>Description</th><th>Notes</th></tr>
+            ${report.parts.map(p => `
+              <tr>
+                <td>${p.partNumber || '-'}</td>
+                <td>${p.quantity}</td>
+                <td>${p.description}</td>
+                <td>${p.notes || ''}</td>
+              </tr>
+            `).join('')}
         </table>
-      ` : '<p>No parts recorded.</p>'}
-      
-      <hr/>
-      <p style="text-align:center; font-size:0.8em; color:#999;">Generated by XOVR Tools — Service Report Pro</p>
-    </body>
-    </html>
+      </div>
+    ` : ''}
+
+    <div class="footer">
+      Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} by XOVR Tools Service Pro
+    </div>
+  </div>
+</body>
+</html>
   `;
 };
 
@@ -163,10 +339,26 @@ export const generateMarkdown = (report: ServiceReport): string => {
 ${report.summary || ''}
 
 ## Issues
-${(report.issues || []).filter(i => !!i).map(i => `
-### ${i.title || 'Untitled'} (${i.resolved ? 'RESOLVED' : 'OPEN'})
+${(report.issues || []).filter(i => !!i).map((i, idx) => `
+### ${idx + 1}. ${i.title || 'Untitled'} (${i.resolved ? 'RESOLVED' : 'OPEN'})
+**Category:** ${i.category}
+**Urgency:** ${i.urgency}
+
 ${i.description || ''}
-${i.resolved ? `**Resolution:** ${i.solutionSummary || ''}` : ''}
+
+${i.resolved ? `
+**Resolution:**
+* Root Cause: ${i.rootCause}
+* Fix: ${i.fixApplied}
+* Verified By: ${i.verifiedBy || 'N/A'}
+* Notes: ${i.notes || ''}
+* Summary: ${i.solutionSummary}
+` : ''}
+
+${i.troubleshootingSteps && i.troubleshootingSteps.length > 0 ? `
+**Troubleshooting Steps:**
+${i.troubleshootingSteps.map(s => `* ${s.text}`).join('\n')}
+` : ''}
 `).join('\n')}
 `;
 };

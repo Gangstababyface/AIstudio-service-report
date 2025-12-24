@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { ReportEditor } from './components/ReportEditor';
@@ -8,12 +9,21 @@ import { fetchCustomerDirectory } from './services/workDriveService';
 import { generateUUID } from './utils/helpers';
 import { generateHTML, generateMarkdown } from './utils/exportUtils';
 
-// Mock Auth
+// Define window.google for TypeScript
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
+// Mock Auth for Fallback
 const MOCK_USER: User = {
     email: 'tech@xovrcncparts.com',
     name: 'Alex Technician',
-    role: 'ADMIN' // Upgraded to ADMIN for demo
+    role: 'ADMIN' 
 };
+
+const DEFAULT_CLIENT_ID = "592806790454-8jaqbc8js7481d72tk6ltde2fj60hmlb.apps.googleusercontent.com";
 
 const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
@@ -22,13 +32,84 @@ const App: React.FC = () => {
     const [generating, setGenerating] = useState(false);
     const [reports, setReports] = useState<ServiceReport[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
+    
+    // Auth Configuration State
+    const [clientId, setClientId] = useState(DEFAULT_CLIENT_ID);
+    const [scriptLoaded, setScriptLoaded] = useState(false);
+    const [showAuthConfig, setShowAuthConfig] = useState(false);
 
-    // Initial Load
+    // Initial Load of Reports
     useEffect(() => {
         if (user && view === 'list') {
             loadReports();
         }
     }, [user, view]);
+
+    // robust script loading check
+    useEffect(() => {
+        const checkScript = () => {
+            if (window.google?.accounts?.id) {
+                setScriptLoaded(true);
+                return true;
+            }
+            return false;
+        };
+
+        if (!checkScript()) {
+            const timer = setInterval(() => {
+                if (checkScript()) clearInterval(timer);
+            }, 200);
+            return () => clearInterval(timer);
+        }
+    }, []);
+
+    // Google Auth Initialization
+    useEffect(() => {
+        if (!user && scriptLoaded && clientId) {
+            const handleCredentialResponse = (response: any) => {
+                try {
+                    // Decode JWT Payload
+                    const base64Url = response.credential.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+
+                    const payload = JSON.parse(jsonPayload);
+
+                    setUser({
+                        email: payload.email,
+                        name: payload.name,
+                        picture: payload.picture,
+                        role: 'ADMIN' // Default to Admin for this demo app
+                    });
+                } catch (e) {
+                    console.error("Failed to decode Google Credential", e);
+                    alert("Failed to decode Google login token.");
+                }
+            };
+
+            try {
+                window.google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+
+                const btnParent = document.getElementById("googleSignInBtn");
+                if (btnParent) {
+                    btnParent.innerHTML = ''; // Clear previous instances
+                    window.google.accounts.id.renderButton(
+                        btnParent,
+                        { theme: "outline", size: "large", width: 280, text: "signin_with" }
+                    );
+                }
+            } catch (err) {
+                console.error("Google Auth Init Error:", err);
+            }
+        }
+    }, [user, scriptLoaded, clientId]);
 
     const loadReports = async () => {
         setLoadingReports(true);
@@ -44,8 +125,7 @@ const App: React.FC = () => {
         }
     };
 
-    const handleLogin = () => {
-        // Simulate Google Auth
+    const handleDemoLogin = () => {
         setUser(MOCK_USER);
     };
 
@@ -166,15 +246,58 @@ const App: React.FC = () => {
 
     if (!user) {
         return (
-            <div className="h-screen flex items-center justify-center bg-gray-100">
+            <div className="h-screen flex items-center justify-center bg-gray-100 p-4">
                 <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm w-full">
                     <div className="text-4xl text-brand-600 mb-4"><i className="fa-solid fa-screwdriver-wrench"></i></div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">XOVR Service Pro</h1>
-                    <p className="text-gray-500 mb-6">Sign in to access tools</p>
-                    <button onClick={handleLogin} className="w-full bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                        Sign in with Google
+                    <p className="text-gray-500 mb-6">Sign in to generate technician profile</p>
+                    
+                    {/* Google Sign In Container */}
+                    <div className="flex justify-center mb-4 min-h-[40px] relative">
+                        {!scriptLoaded && (
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Loading Auth...
+                            </div>
+                        )}
+                        <div id="googleSignInBtn"></div>
+                    </div>
+
+                    <div className="relative flex py-2 items-center">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase">Or</span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    <button onClick={handleDemoLogin} className="w-full bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded shadow-sm hover:bg-gray-100 flex items-center justify-center gap-2 mt-2 text-sm">
+                        <i className="fa-solid fa-user-ninja"></i>
+                        Demo Account
                     </button>
+                    
+                    {/* Config Toggle */}
+                    <div className="mt-8 pt-4 border-t border-gray-100">
+                        <button 
+                            onClick={() => setShowAuthConfig(!showAuthConfig)} 
+                            className="text-xs text-gray-400 hover:text-gray-600 flex items-center justify-center w-full"
+                        >
+                            <i className="fa-solid fa-gear mr-1"></i> 
+                            {showAuthConfig ? 'Hide Configuration' : 'Configuration'}
+                        </button>
+                        
+                        {showAuthConfig && (
+                            <div className="mt-3 text-left">
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Google Client ID</label>
+                                <input 
+                                    type="text" 
+                                    value={clientId}
+                                    onChange={(e) => setClientId(e.target.value)}
+                                    className="w-full text-xs border rounded p-2 bg-gray-50 text-gray-600 break-all"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1">
+                                    If you see "401 invalid_client", your current domain/port is not whitelisted for this ID.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -196,7 +319,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <Layout user={user} title="Dashboard" actions={
+        <Layout user={user} onLogout={() => setUser(null)} title="Dashboard" actions={
             <div className="flex gap-2">
                 <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-brand-600 text-white px-4 py-2 rounded text-sm font-medium shadow hover:bg-brand-700">
                     <i className="fa-solid fa-plus mr-2"></i> New Report
