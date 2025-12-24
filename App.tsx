@@ -38,6 +38,11 @@ const App: React.FC = () => {
     const [scriptLoaded, setScriptLoaded] = useState(false);
     const [showAuthConfig, setShowAuthConfig] = useState(false);
 
+    // Manual Login State (Dev Fallback)
+    const [showManualLogin, setShowManualLogin] = useState(false);
+    const [manualName, setManualName] = useState('');
+    const [manualEmail, setManualEmail] = useState('');
+
     // Initial Load of Reports
     useEffect(() => {
         if (user && view === 'list') {
@@ -65,7 +70,7 @@ const App: React.FC = () => {
 
     // Google Auth Initialization
     useEffect(() => {
-        if (!user && scriptLoaded && clientId) {
+        if (!user && scriptLoaded && clientId && !showManualLogin) {
             const handleCredentialResponse = (response: any) => {
                 try {
                     // Decode JWT Payload
@@ -109,7 +114,7 @@ const App: React.FC = () => {
                 console.error("Google Auth Init Error:", err);
             }
         }
-    }, [user, scriptLoaded, clientId]);
+    }, [user, scriptLoaded, clientId, showManualLogin]);
 
     const loadReports = async () => {
         setLoadingReports(true);
@@ -127,6 +132,18 @@ const App: React.FC = () => {
 
     const handleDemoLogin = () => {
         setUser(MOCK_USER);
+    };
+
+    const handleManualLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (manualName && manualEmail) {
+            setUser({
+                name: manualName,
+                email: manualEmail,
+                role: 'ADMIN',
+                picture: `https://ui-avatars.com/api/?name=${manualName}`
+            });
+        }
     };
 
     const downloadArtifact = (e: React.MouseEvent, report: ServiceReport, type: 'html' | 'json' | 'md') => {
@@ -247,32 +264,80 @@ const App: React.FC = () => {
     if (!user) {
         return (
             <div className="h-screen flex items-center justify-center bg-gray-100 p-4">
-                <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm w-full">
+                <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm w-full transition-all">
                     <div className="text-4xl text-brand-600 mb-4"><i className="fa-solid fa-screwdriver-wrench"></i></div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">XOVR Service Pro</h1>
                     <p className="text-gray-500 mb-6">Sign in to generate technician profile</p>
                     
-                    {/* Google Sign In Container */}
-                    <div className="flex justify-center mb-4 min-h-[40px] relative">
-                        {!scriptLoaded && (
-                            <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                                <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Loading Auth...
+                    {!showManualLogin ? (
+                        <>
+                            {/* Google Sign In Container */}
+                            <div className="flex justify-center mb-4 min-h-[40px] relative">
+                                {!scriptLoaded && (
+                                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                        <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Loading Auth...
+                                    </div>
+                                )}
+                                <div id="googleSignInBtn"></div>
                             </div>
-                        )}
-                        <div id="googleSignInBtn"></div>
-                    </div>
 
-                    <div className="relative flex py-2 items-center">
-                        <div className="flex-grow border-t border-gray-300"></div>
-                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase">Or</span>
-                        <div className="flex-grow border-t border-gray-300"></div>
-                    </div>
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-gray-300"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase">Or</span>
+                                <div className="flex-grow border-t border-gray-300"></div>
+                            </div>
 
-                    <button onClick={handleDemoLogin} className="w-full bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded shadow-sm hover:bg-gray-100 flex items-center justify-center gap-2 mt-2 text-sm">
-                        <i className="fa-solid fa-user-ninja"></i>
-                        Demo Account
-                    </button>
-                    
+                            <button onClick={handleDemoLogin} className="w-full bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded shadow-sm hover:bg-gray-100 flex items-center justify-center gap-2 mt-2 text-sm">
+                                <i className="fa-solid fa-user-ninja"></i>
+                                Demo Account
+                            </button>
+                            
+                            <div className="mt-4">
+                                <button 
+                                    onClick={() => setShowManualLogin(true)} 
+                                    className="text-xs text-brand-600 hover:text-brand-800 hover:underline"
+                                >
+                                    Login with specific email (Dev Mode)
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <form onSubmit={handleManualLogin} className="space-y-4 text-left animate-fade-in">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Your Name</label>
+                                <input 
+                                    required
+                                    type="text" 
+                                    value={manualName}
+                                    onChange={e => setManualName(e.target.value)}
+                                    className="w-full border rounded p-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+                                    placeholder="e.g. Dustin Tech"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Email Address</label>
+                                <input 
+                                    required
+                                    type="email" 
+                                    value={manualEmail}
+                                    onChange={e => setManualEmail(e.target.value)}
+                                    className="w-full border rounded p-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+                                    placeholder="e.g. dustin@xovrcncparts.com"
+                                />
+                            </div>
+                            <button type="submit" className="w-full bg-brand-600 text-white font-medium py-2 px-4 rounded shadow-sm hover:bg-brand-700 mt-2 text-sm">
+                                Sign In Manually
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={() => setShowManualLogin(false)}
+                                className="w-full text-gray-400 hover:text-gray-600 text-xs mt-2"
+                            >
+                                Cancel
+                            </button>
+                        </form>
+                    )}
+
                     {/* Config Toggle */}
                     <div className="mt-8 pt-4 border-t border-gray-100">
                         <button 
@@ -293,7 +358,7 @@ const App: React.FC = () => {
                                     className="w-full text-xs border rounded p-2 bg-gray-50 text-gray-600 break-all"
                                 />
                                 <p className="text-[10px] text-gray-400 mt-1">
-                                    If you see "401 invalid_client", your current domain/port is not whitelisted for this ID.
+                                    Error 401/Origin? Use Manual Login above or add this URL to Google Console.
                                 </p>
                             </div>
                         )}

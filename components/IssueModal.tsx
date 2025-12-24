@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Issue, ISSUE_CATEGORIES, Attachment, PartEntry } from '../types';
-import { generateSolutionSummary, analyzeImage } from '../services/geminiService';
+import { generateSolutionSummary, analyzeImage, transcribeAudio } from '../services/geminiService';
 import { uploadFileToWorkDrive } from '../services/workDriveService';
 import { generateUUID, processFile } from '../utils/helpers';
 
@@ -35,6 +36,11 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
     const [issue, setIssue] = useState<Issue>(emptyIssue);
     const [tab, setTab] = useState<'details' | 'solutions' | 'media' | 'parts' | 'other'>('details');
     const [analyzing, setAnalyzing] = useState(false);
+    
+    // Audio Recording State
+    const [activeRecordingField, setActiveRecordingField] = useState<string | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
     useEffect(() => {
         if (issueId === 'new') {
@@ -47,6 +53,56 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
 
     const handleChange = (field: keyof Issue, value: any) => {
         setIssue(prev => ({ ...prev, [field]: value }));
+    };
+
+    // --- Audio Handlers ---
+    const toggleRecording = async (field: keyof Issue) => {
+        if (activeRecordingField === field) {
+            // Stop Recording
+            mediaRecorderRef.current?.stop();
+            setActiveRecordingField(null);
+        } else {
+            // Start Recording
+            if (activeRecordingField) return; // Prevent multiple recordings
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = mediaRecorder;
+                audioChunksRef.current = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunksRef.current.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    // Show some loading state if needed, but for now we rely on the text appearing
+                    try {
+                        const text = await transcribeAudio(audioBlob);
+                        if (text) {
+                            setIssue(prev => {
+                                const currentVal = (prev[field] as string) || '';
+                                const spacer = currentVal && !currentVal.endsWith(' ') ? ' ' : '';
+                                return { ...prev, [field]: currentVal + spacer + text };
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Transcription failed", err);
+                        alert("Failed to transcribe audio.");
+                    }
+                    
+                    // Cleanup
+                    stream.getTracks().forEach(t => t.stop());
+                };
+
+                mediaRecorder.start();
+                setActiveRecordingField(field as string);
+            } catch (err) {
+                console.error("Mic access denied", err);
+                alert("Microphone access denied or not available.");
+            }
+        }
     };
 
     // --- List Handlers ---
@@ -259,6 +315,8 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                 onUpload={(files) => handleFileUpload(files, 'issue_photos', 'description')}
                                 attachments={issue.attachments.filter(a => a.fieldRef === 'description')}
                                 onRemoveAttachment={removeAttachment}
+                                onToggleRecord={() => toggleRecording('description')}
+                                isRecording={activeRecordingField === 'description'}
                             />
                         </div>
                     )}
@@ -331,6 +389,8 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'rootCause')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'rootCause')}
                                             onRemoveAttachment={removeAttachment}
+                                            onToggleRecord={() => toggleRecording('rootCause')}
+                                            isRecording={activeRecordingField === 'rootCause'}
                                         />
                                         <ResolutionField 
                                             id="fixApplied"
@@ -342,6 +402,8 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'fixApplied')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'fixApplied')}
                                             onRemoveAttachment={removeAttachment}
+                                            onToggleRecord={() => toggleRecording('fixApplied')}
+                                            isRecording={activeRecordingField === 'fixApplied'}
                                         />
                                         <ResolutionField 
                                             id="verifiedBy"
@@ -363,6 +425,8 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'notes')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'notes')}
                                             onRemoveAttachment={removeAttachment}
+                                            onToggleRecord={() => toggleRecording('notes')}
+                                            isRecording={activeRecordingField === 'notes'}
                                         />
                                     </div>
                                     
@@ -594,12 +658,14 @@ const ResolutionField: React.FC<{
     onUpload?: (files: FileList | null) => void;
     attachments?: Attachment[];
     onRemoveAttachment?: (id: string) => void;
-}> = ({ label, value, onChange, placeholder, rows = 2, onUpload, attachments, onRemoveAttachment }) => {
+    onToggleRecord?: () => void;
+    isRecording?: boolean;
+}> = ({ label, value, onChange, placeholder, rows = 2, onUpload, attachments, onRemoveAttachment, onToggleRecord, isRecording }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     return (
         <div>
             <label className="block text-sm font-bold text-gray-600 mb-1">{label}</label>
-            <div className="bg-white p-1 rounded border border-gray-300 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+            <div className="bg-white p-1 rounded border border-gray-300 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500 relative">
                  <textarea 
                     rows={rows}
                     className="block w-full border-none p-2 resize-none focus:ring-0 text-gray-800 placeholder-gray-400 sm:text-sm"
@@ -607,13 +673,26 @@ const ResolutionField: React.FC<{
                     value={value}
                     onChange={e => onChange(e.target.value)}
                 />
-                <div className="mt-1">
+                <div className="mt-1 flex items-center space-x-2">
                      <button 
                         onClick={() => fileInputRef.current?.click()}
                         className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
                      >
                         <i className="fa-solid fa-arrow-up-from-bracket mr-1"></i> Add Photo
                      </button>
+                     {onToggleRecord && (
+                         <button 
+                            onClick={onToggleRecord}
+                            className={`inline-flex items-center px-2 py-1 border shadow-sm text-xs font-medium rounded transition-colors ${
+                                isRecording 
+                                ? 'bg-red-50 border-red-300 text-red-600 animate-pulse' 
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                         >
+                            <i className={`fa-solid ${isRecording ? 'fa-stop' : 'fa-microphone'} mr-1`}></i> 
+                            {isRecording ? 'Stop Recording' : 'Dictate'}
+                         </button>
+                     )}
                      {onUpload && <input type="file" ref={fileInputRef} hidden onChange={e => onUpload(e.target.files)} />}
                 </div>
             </div>

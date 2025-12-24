@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User } from '../types';
 
@@ -11,37 +12,41 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, title, actions }) => {
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <div className="text-xl font-bold text-brand-600 flex items-center gap-2">
-            <i className="fa-solid fa-screwdriver-wrench"></i>
-            <span className="hidden sm:inline">XOVR Tools</span>
+    <div className="flex flex-col h-full bg-slate-100">
+      {/* Dark Industrial Header */}
+      <header className="bg-[#111827] border-b border-black h-16 flex items-center justify-between sticky top-0 z-50 shadow-lg shrink-0">
+        <div className="flex items-center h-full">
+          {/* Logo Area - White Box */}
+          <div className="h-full bg-white px-4 flex items-center justify-center border-r border-slate-200">
+             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6942d9eb36db1e00f69ccffb/ffd8b423f_xovr-logo.png" alt="XOVR" className="h-14 w-auto object-contain" />
           </div>
-          {title && (
-            <>
-              <span className="text-gray-300">|</span>
-              <h1 className="text-lg font-medium text-gray-800 truncate max-w-[200px] sm:max-w-md">{title}</h1>
-            </>
-          )}
+          
+          {/* Title Area */}
+          <div className="flex items-center px-8 h-full border-r border-slate-800 bg-slate-900/50">
+             <h1 className="text-sm font-black text-white tracking-[0.2em] uppercase">{title || 'DASHBOARD'}</h1>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center pr-6 space-x-6">
           {actions}
+          
           {user && (
-            <div className="flex items-center space-x-2 pl-3 border-l border-gray-200">
-              <div className="text-right hidden md:block">
-                <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                <div className="text-xs text-gray-500">{user.role}</div>
+            <div className="flex items-center gap-4 pl-6 border-l border-slate-700 h-8">
+              <div className="text-right hidden md:block leading-tight">
+                <div className="text-xs font-bold text-slate-200">{user.name}</div>
+                <div className="text-[10px] text-brand-500 font-bold tracking-wider">{user.role}</div>
               </div>
-              <img src={user.picture || `https://ui-avatars.com/api/?name=${user.name}`} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200" />
+              <div className="relative group cursor-pointer">
+                  <img src={user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=dc2626&color=fff`} alt="Profile" className="w-9 h-9 rounded bg-slate-800 border border-slate-600 object-cover" />
+                  <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#111827] rounded-full"></div>
+              </div>
             </div>
           )}
         </div>
       </header>
       
-      <main className="flex-1 overflow-auto p-4 sm:p-6">
-        <div className="max-w-5xl mx-auto">
+      <main className="flex-1 overflow-auto p-4 sm:p-8 relative">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
           {children}
         </div>
       </main>

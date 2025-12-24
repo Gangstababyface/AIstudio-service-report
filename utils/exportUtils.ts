@@ -1,56 +1,84 @@
 
 import { ServiceReport, Issue, Attachment, PartEntry } from '../types';
+import JSZip from 'jszip';
 
 export const generateHTML = (report: ServiceReport): string => {
   const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6942d9eb36db1e00f69ccffb/ffd8b423f_xovr-logo.png";
 
   const css = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: #262626; color: white; padding: 30px; border-bottom: 4px solid #B91C1C; }
-    .logo { height: 60px; margin-bottom: 15px; }
-    .header h1 { font-size: 24px; margin-bottom: 5px; }
-    .header p { opacity: 0.9; font-size: 14px; }
-    .meta-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 30px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-    .meta-item { }
-    .meta-item label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; display: block; margin-bottom: 4px; }
-    .meta-item span { font-weight: 600; color: #1e293b; }
-    .summary { padding: 20px 30px; border-bottom: 1px solid #e2e8f0; }
-    .summary h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px; }
-    .summary p { color: #475569; font-size: 14px; white-space: pre-wrap; }
-    .issues { padding: 20px 30px; }
-    .issues > h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 20px; }
-    .issue { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; page-break-inside: avoid; }
-    .issue-header { background: #f8fafc; padding: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e2e8f0; }
-    .issue-number { background: #1e293b; color: white; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-    .issue-title { font-weight: 600; flex: 1; font-size: 14px; }
-    .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
-    .badge.resolved { background: #dcfce7; color: #166534; }
-    .badge.unresolved { background: #fef3c7; color: #92400e; }
-    .issue-meta { padding: 10px 15px; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
-    .category { font-size: 12px; color: #64748b; font-weight: 500; text-transform: uppercase; }
-    .section { padding: 15px; border-top: 1px solid #f1f5f9; }
-    .issue-meta + .section { border-top: none; }
-    .section h4 { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 10px; }
-    .section p { color: #64748b; font-size: 14px; margin-bottom: 8px; white-space: pre-wrap; }
-    .section ol { padding-left: 20px; }
-    .section ul { padding-left: 20px; }
-    .section li { margin-bottom: 8px; color: #475569; font-size: 13px; }
-    .section table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .section th, .section td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
-    .section th { background: #f8fafc; font-weight: 600; color: #64748b; }
-    .section.warning { background: #fef3c7; }
-    .section.follow-up { background: #dbeafe; }
-    .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; margin-bottom: 8px; }
-    .photo-item { border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: white; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; background: #eef2f6; padding: 20px; -webkit-print-color-adjust: exact; }
+    .container { max-width: 900px; margin: 0 auto; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    
+    /* Brand Header */
+    .header { background: #111827; color: white; padding: 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid #dc2626; }
+    .header-info h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; margin: 0; }
+    .header-info p { color: #9ca3af; font-size: 14px; margin-top: 5px; font-weight: 500; }
+    .logo { height: 50px; background: white; padding: 5px; border-radius: 4px; }
+
+    /* Meta Grid */
+    .meta-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e5e7eb; border-bottom: 1px solid #e5e7eb; }
+    .meta-item { background: white; padding: 12px 20px; }
+    .meta-item label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; display: block; margin-bottom: 4px; font-weight: 700; }
+    .meta-item span { font-size: 13px; font-weight: 600; color: #111827; display: block; }
+
+    /* Summary Box */
+    .summary { padding: 30px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #dc2626; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; }
+    .summary p { color: #374151; font-size: 14px; white-space: pre-wrap; }
+
+    /* Recommendations Grid */
+    .rec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 15px; }
+    .rec-item label { display: block; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 5px; }
+    .rec-item div { font-size: 13px; color: #1f2937; background: #f9fafb; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb; min-height: 60px; }
+
+    /* Lists (Tools/Nameplates) */
+    .lists-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+    .list-box h4 { font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    .list-box ul { list-style: none; padding: 0; }
+    .list-box li { font-size: 13px; color: #374151; padding: 4px 0; border-bottom: 1px dashed #f3f4f6; }
+    .list-box li:last-child { border-bottom: none; }
+
+    /* Issues */
+    .issues { padding: 30px; background: #f9fafb; }
+    .issue { background: white; border: 1px solid #e5e7eb; margin-bottom: 25px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); page-break-inside: avoid; }
+    
+    .issue-header { background: #f3f4f6; padding: 15px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #e5e7eb; }
+    .issue-number { background: #1f2937; color: white; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 2px; }
+    .issue-title { font-weight: 700; flex: 1; font-size: 15px; color: #111827; }
+    .badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700; text-transform: uppercase; }
+    .badge.resolved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge.unresolved { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .issue-content { padding: 20px; }
+    .sub-section { margin-bottom: 20px; }
+    .sub-header { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
+    .text-block { font-size: 14px; color: #4b5563; line-height: 1.6; }
+
+    .resolution-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 4px; margin-top: 15px; }
+    .resolution-title { color: #166534; font-weight: 700; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    th { background: #1f2937; color: white; text-align: left; padding: 10px; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+    td { padding: 10px; border-bottom: 1px solid #e5e7eb; color: #374151; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Photos */
+    .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+    .photo-item { border: 1px solid #e5e7eb; background: white; padding: 4px; }
     .photo-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
-    .photo-title { font-weight: 600; color: #1e293b; padding: 8px 12px 0 12px; margin: 0; font-size: 12px; }
-    .caption { color: #64748b; padding: 4px 12px 8px 12px; margin: 0; font-size: 11px; }
-    .footer { padding: 20px 30px; background: #f8fafc; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
-    .parts-global { margin-top: 30px; padding: 0 30px 30px 30px; }
-    .parts-global h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 15px; }
-    @media print { body { background: white; padding: 0; } .container { box-shadow: none; max-width: 100%; } .issue { page-break-inside: avoid; } }
+    .caption { font-size: 11px; color: #6b7280; padding: 4px; text-align: center; }
+
+    .footer { background: #111827; color: #9ca3af; padding: 20px; text-align: center; font-size: 11px; }
+    
+    @media print { 
+      body { background: white; padding: 0; } 
+      .container { box-shadow: none; max-width: 100%; }
+      .header { -webkit-print-color-adjust: exact; background: #111827 !important; color: white !important; }
+      .issue-number, th { background: #1f2937 !important; color: white !important; }
+      .rec-item div { border: 1px solid #ccc !important; }
+    }
   `;
 
   // Helper to render attachment images
@@ -67,13 +95,13 @@ export const generateHTML = (report: ServiceReport): string => {
             if (isWebImage(a.fileType) || (a.data && a.data.startsWith('data:image/'))) {
                 return `
                     <div class="photo-item">
-                        <img src="${a.data || a.url || ''}" alt="${a.fileName || 'Image'}" />
-                        ${a.caption ? `<p class="caption">${a.caption}</p>` : ''}
+                        <img src="${a.data || a.url || ''}" alt="${a.fileName}" />
+                        ${a.caption ? `<div class="caption">${a.caption}</div>` : ''}
                     </div>
                 `;
             } else {
                 return `
-                    <div class="photo-item" style="display:flex; align-items:center; justify-content:center; height:140px; background:#f9f9f9; color:#666; font-size:12px; padding:10px; text-align:center;">
+                    <div class="photo-item" style="display:flex; align-items:center; justify-content:center; height:140px; background:#f3f4f6; color:#6b7280; font-size:11px; text-align:center;">
                         <div>
                            <strong>FILE</strong><br/>${a.fileName}
                         </div>
@@ -88,13 +116,13 @@ export const generateHTML = (report: ServiceReport): string => {
   const renderPartsTable = (parts: PartEntry[]) => {
       if (!parts || parts.length === 0) return '';
       return `
-        <div class="section">
-          <h4>Parts / Consumables</h4>
+        <div class="sub-section">
+          <div class="sub-header">Parts / Consumables</div>
           <table>
             <tr><th>Part #</th><th>Qty</th><th>Description</th><th>Notes</th></tr>
             ${parts.map(p => `
               <tr>
-                <td>${p.partNumber || '-'}</td>
+                <td style="font-family: monospace; font-weight:600;">${p.partNumber || '-'}</td>
                 <td>${p.quantity}</td>
                 <td>${p.description}</td>
                 <td>${p.notes || ''}</td>
@@ -110,16 +138,8 @@ export const generateHTML = (report: ServiceReport): string => {
     const atts = issue.attachments || [];
     const isResolved = issue.resolved;
     
-    // Filters for specific fields
     const getFieldPhotos = (ref: string) => atts.filter(a => a.bucket === 'issue_photos' && a.fieldRef === ref);
-    // Fallback for legacy general issue photos or drag-dropped without specific field
     const getGeneralPhotos = () => atts.filter(a => a.bucket === 'issue_photos' && !a.fieldRef);
-    
-    // Filter for other media buckets (Media Tab in modal)
-    const getBucketPhotos = (bucket: string) => atts.filter(a => a.bucket === bucket);
-    
-    const otherMediaBuckets = ['created_media', 'received_media', 'wechat', 'old_backup', 'new_backup', 'other'];
-    const hasOtherMedia = atts.some(a => otherMediaBuckets.includes(a.bucket));
     
     return `
     <div class="issue">
@@ -127,123 +147,65 @@ export const generateHTML = (report: ServiceReport): string => {
         <span class="issue-number">#${index + 1}</span>
         <span class="issue-title">${issue.title || 'Untitled Issue'}</span>
         <span class="badge ${isResolved ? 'resolved' : 'unresolved'}">
-          ${isResolved ? 'Resolved' : 'Unresolved'}
+          ${isResolved ? 'Resolved' : 'Open Issue'}
         </span>
       </div>
-      <div class="issue-meta">
-        <span class="category">${issue.category || 'General'}</span>
-        ${issue.urgency && !isResolved ? `<span style="float:right; font-size:11px; font-weight:bold; color:#b91c1c;">Priority: ${issue.urgency}</span>` : ''}
-      </div>
       
-      <div class="section">
-        <h4>Problem Description</h4>
-        ${renderAttachments(getFieldPhotos('issueTitle'))}
-        
-        <p>${issue.description || 'No description provided.'}</p>
-        ${renderAttachments(getFieldPhotos('description'))}
-        
-        ${/* Render general photos that aren't tied to a specific field */ ''}
-        ${renderAttachments(getGeneralPhotos())}
+      <div class="issue-content">
+        <div class="sub-section">
+          <div class="sub-header">Problem Description <span style="font-weight:400; color:#9ca3af;">— ${issue.category}</span></div>
+          <div class="text-block">${issue.description || 'No description provided.'}</div>
+          ${renderAttachments(getFieldPhotos('issueTitle'))}
+          ${renderAttachments(getFieldPhotos('description'))}
+          ${renderAttachments(getGeneralPhotos())}
+        </div>
 
         ${issue.troubleshootingSteps && issue.troubleshootingSteps.length > 0 ? `
-           <div style="margin-top: 15px;">
-             <strong>Troubleshooting Steps Taken:</strong>
-             <ol style="margin-top:5px;">
+           <div class="sub-section">
+             <div class="sub-header">Troubleshooting Steps</div>
+             <ul style="padding-left: 20px; font-size: 14px; color: #4b5563;">
                ${issue.troubleshootingSteps.map(s => `
-                 <li>
+                 <li style="margin-bottom:4px;">
                     ${s.text}
                     ${renderAttachments(getFieldPhotos(s.id))}
                  </li>
                `).join('')}
-             </ol>
+             </ul>
            </div>
         ` : ''}
-      </div>
 
-      ${isResolved ? `
-        <div class="section" style="background:#f8fafc;">
-          <h4>Resolution</h4>
-          ${issue.solutionSummary ? `
-             <div style="margin-bottom: 12px;">
-               <p><strong>Summary:</strong> ${issue.solutionSummary}</p>
-               ${renderAttachments(getFieldPhotos('solutionSummary'))}
-             </div>
-          ` : ''}
-          
-          <div style="margin-bottom: 12px;">
-            <p><strong>Root Cause:</strong> ${issue.rootCause || 'Not recorded'}</p>
+        ${isResolved ? `
+          <div class="resolution-box">
+            <div class="resolution-title">Resolution</div>
+            
+            ${issue.solutionSummary ? `
+               <div style="margin-bottom: 12px; font-style: italic; color: #1f2937;">
+                 ${issue.solutionSummary}
+               </div>
+            ` : ''}
+            
+            <div style="font-size: 13px; display: grid; grid-template-columns: 100px 1fr; gap: 8px; margin-bottom: 8px;">
+               <div style="font-weight: 700;">Root Cause:</div>
+               <div>${issue.rootCause || '-'}</div>
+            </div>
             ${renderAttachments(getFieldPhotos('rootCause'))}
-          </div>
 
-          <div style="margin-bottom: 12px;">
-            <p><strong>Fix Applied:</strong> ${issue.fixApplied || 'Not recorded'}</p>
+            <div style="font-size: 13px; display: grid; grid-template-columns: 100px 1fr; gap: 8px; margin-bottom: 8px;">
+               <div style="font-weight: 700;">Fix Applied:</div>
+               <div>${issue.fixApplied || '-'}</div>
+            </div>
             ${renderAttachments(getFieldPhotos('fixApplied'))}
           </div>
-          
-          ${issue.verifiedBy ? `
-              <div style="margin-bottom: 12px;">
-                  <p><strong>Verified By:</strong> ${issue.verifiedBy}</p>
-                  ${renderAttachments(getFieldPhotos('verifiedBy'))}
-              </div>
-          ` : ''}
+        ` : ''}
 
-          ${issue.notes ? `
-              <div style="margin-bottom: 12px;">
-                  <p><strong>Notes:</strong> ${issue.notes}</p>
-                  ${renderAttachments(getFieldPhotos('notes'))}
-              </div>
-          ` : ''}
-        </div>
-      ` : ''}
-      
-      ${/* Show Proposed Fixes if unresolved or if they exist with photos */ !isResolved && issue.proposedFixes && issue.proposedFixes.length > 0 ? `
-          <div class="section">
-             <h4>Proposed Fixes</h4>
-             <ul>
-               ${issue.proposedFixes.map(f => `
-                 <li>
-                    ${f.text}
-                    ${renderAttachments(getFieldPhotos(f.id))}
-                 </li>
-               `).join('')}
-             </ul>
-          </div>
-      ` : ''}
-
-      ${renderPartsTable(issue.parts)}
-      
-      ${/* Render other buckets if they exist */ hasOtherMedia ? `
-        <div class="section">
-            <h4>Attached Media</h4>
-            ${otherMediaBuckets.map(b => {
-                const photos = getBucketPhotos(b);
-                if (photos.length === 0) return '';
-                const titleMap: Record<string, string> = {
-                    'created_media': 'Created Media',
-                    'received_media': 'Received Media',
-                    'wechat': 'WeChat Screenshots',
-                    'old_backup': 'Old Machine Backup',
-                    'new_backup': 'New Machine Backup',
-                    'other': 'Other Files'
-                };
-                return `
-                    <div style="margin-bottom: 15px;">
-                        <h5 style="font-size: 12px; color: #64748b; margin-bottom: 5px; text-transform: uppercase;">${titleMap[b] || b}</h5>
-                        ${renderAttachments(photos)}
-                    </div>
-                `;
-            }).join('')}
-        </div>
-      ` : ''}
-      
-      ${issue.followUpRequired ? `
-        <div class="section follow-up">
-           <h4>Follow-up Required</h4>
-           <p>This issue has been flagged for further attention from the office.</p>
-        </div>
-      ` : ''}
+        ${renderPartsTable(issue.parts)}
+      </div>
     </div>
   `};
+
+  const hasRecommendations = report.designSuggestion.current || report.designSuggestion.problem || report.designSuggestion.change;
+  const hasTools = (report.toolsBought && report.toolsBought.length > 0) || (report.toolsUsed && report.toolsUsed.length > 0);
+  const hasNameplates = report.newNameplates && report.newNameplates.length > 0;
 
   return `
 <!DOCTYPE html>
@@ -251,15 +213,17 @@ export const generateHTML = (report: ServiceReport): string => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Service Report - ${report.customer?.companyName || 'XOVR Tools'}</title>
+  <title>Service Report - ${report.customer?.companyName || 'XOVR'}</title>
   <style>${css}</style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="${logoUrl}" alt="XOVR Tools Logo" class="logo" />
-      <h1>Service Report</h1>
-      <p>${report.customer?.companyName || ''} • ${report.machine?.modelNumber || 'Unknown Model'}</p>
+      <div class="header-info">
+        <h1>Service Report</h1>
+        <p>${report.customer?.companyName || 'Unknown Customer'} • ${report.machine?.modelNumber || 'Machine'}</p>
+      </div>
+      <img src="${logoUrl}" alt="XOVR Logo" class="logo" />
     </div>
     
     <div class="meta-section">
@@ -268,44 +232,109 @@ export const generateHTML = (report: ServiceReport): string => {
         <span>${report.technicianName}</span>
       </div>
       <div class="meta-item">
-        <label>Date</label>
+        <label>Arrival Date</label>
         <span>${report.arrivalDate}</span>
+      </div>
+      <div class="meta-item">
+        <label>Departure Date</label>
+        <span>${report.departureDate || 'N/A'}</span>
+      </div>
+      <div class="meta-item">
+        <label>Report ID</label>
+        <span style="font-family: monospace;">${report.reportId || 'DRAFT'}</span>
       </div>
       <div class="meta-item">
         <label>Customer Contact</label>
         <span>${report.customer?.contactPerson || 'N/A'}</span>
       </div>
       <div class="meta-item">
-        <label>Machine Serial</label>
-        <span>${report.machine?.serialNumber || 'N/A'}</span>
+        <label>Service Type</label>
+        <span>${report.serviceTypes.join(', ') || 'General Service'}</span>
       </div>
       <div class="meta-item">
-        <label>Report ID</label>
-        <span>${report.reportId || 'DRAFT'}</span>
+        <label>Machine Serial</label>
+        <span style="font-family: monospace;">${report.machine?.serialNumber || 'N/A'}</span>
+      </div>
+      <div class="meta-item">
+        <label>Controller</label>
+        <span>${report.machine?.controllerType || 'N/A'}</span>
+      </div>
+      <div class="meta-item">
+        <label>Software Ver</label>
+        <span>${report.machine?.softwareVersion || 'N/A'}</span>
       </div>
     </div>
     
     ${report.summary ? `
       <div class="summary">
-        <h3>Summary / Reason for Visit</h3>
+        <div class="section-title">Visit Summary</div>
         <p>${report.summary}</p>
         ${renderAttachments(report.attachments, a => a.bucket === 'summary')}
+        
+        ${hasRecommendations ? `
+            <div class="section-title" style="margin-top:20px; color:#4b5563; border-color:#e5e7eb;">Design & Process Recommendations</div>
+            <div class="rec-grid">
+                <div class="rec-item">
+                    <label>Current Implementation</label>
+                    <div>${report.designSuggestion.current || '-'}</div>
+                </div>
+                <div class="rec-item">
+                    <label>Problem Identified</label>
+                    <div>${report.designSuggestion.problem || '-'}</div>
+                </div>
+                <div class="rec-item">
+                    <label>Recommended Change</label>
+                    <div>${report.designSuggestion.change || '-'}</div>
+                </div>
+            </div>
+        ` : ''}
+
+        ${(hasTools || hasNameplates) ? `
+            <div class="lists-container">
+                ${(report.toolsBought && report.toolsBought.length > 0) ? `
+                    <div class="list-box">
+                        <h4>Tools & Supplies Bought</h4>
+                        <ul>
+                            ${report.toolsBought.map(t => `<li>${t.text}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${(report.toolsUsed && report.toolsUsed.length > 0) ? `
+                    <div class="list-box">
+                        <h4>Tools & Consumables Used</h4>
+                        <ul>
+                            ${report.toolsUsed.map(t => `<li>${t.text}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                ${(report.newNameplates && report.newNameplates.length > 0) ? `
+                    <div class="list-box">
+                        <h4>Nameplates Needed</h4>
+                        <ul>
+                            ${report.newNameplates.map(t => `<li>${t.text}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        ` : ''}
       </div>
     ` : ''}
     
     <div class="issues">
-      <h3>Issues (${report.issues?.length || 0})</h3>
+      <div class="section-title" style="color: #4b5563; border-color: #e5e7eb;">Reported Issues (${report.issues?.length || 0})</div>
       ${(report.issues || []).map((issue, idx) => renderIssue(issue, idx)).join('')}
     </div>
 
     ${report.parts && report.parts.length > 0 ? `
-      <div class="parts-global">
-        <h3>General Parts Used (Not tied to specific issues)</h3>
+      <div class="summary">
+        <div class="section-title">General Parts List</div>
         <table>
             <tr><th>Part #</th><th>Qty</th><th>Description</th><th>Notes</th></tr>
             ${report.parts.map(p => `
               <tr>
-                <td>${p.partNumber || '-'}</td>
+                <td style="font-family: monospace; font-weight:600;">${p.partNumber || '-'}</td>
                 <td>${p.quantity}</td>
                 <td>${p.description}</td>
                 <td>${p.notes || ''}</td>
@@ -316,7 +345,7 @@ export const generateHTML = (report: ServiceReport): string => {
     ` : ''}
 
     <div class="footer">
-      Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} by XOVR Tools Service Pro
+      Generated by XOVR CNC Service Pro • ${new Date().toLocaleDateString()}
     </div>
   </div>
 </body>
@@ -328,15 +357,26 @@ export const generateMarkdown = (report: ServiceReport): string => {
   return `# Service Report ${report.reportId || 'DRAFT'}
 **Technician:** ${report.technicianName || ''}
 **Customer:** ${report.customer?.companyName || ''}
-**Date:** ${report.arrivalDate || ''}
+**Date:** ${report.arrivalDate || ''} to ${report.departureDate || ''}
 
 ## Machine
 * Model: ${report.machine?.modelNumber || ''}
 * Serial: ${report.machine?.serialNumber || ''}
 * Controller: ${report.machine?.controllerType || ''}
+* Software: ${report.machine?.softwareVersion || ''}
 
 ## Summary
 ${report.summary || ''}
+
+## Recommendations
+* **Current:** ${report.designSuggestion.current}
+* **Problem:** ${report.designSuggestion.problem}
+* **Change:** ${report.designSuggestion.change}
+
+## Additional Items
+* **Tools Bought:** ${report.toolsBought.map(t => t.text).join(', ')}
+* **Tools Used:** ${report.toolsUsed.map(t => t.text).join(', ')}
+* **Nameplates Needed:** ${report.newNameplates.map(t => t.text).join(', ')}
 
 ## Issues
 ${(report.issues || []).filter(i => !!i).map((i, idx) => `
@@ -362,3 +402,49 @@ ${i.troubleshootingSteps.map(s => `* ${s.text}`).join('\n')}
 `).join('\n')}
 `;
 };
+
+export const generateZipPackage = async (report: ServiceReport): Promise<Blob> => {
+    const zip = new JSZip();
+    
+    // 1. Metadata & Data
+    const { _syncState, ...cleanReport } = report;
+    zip.file(`report_${report.reportId || 'draft'}.json`, JSON.stringify(cleanReport, null, 2));
+    zip.file(`report_${report.reportId || 'draft'}.html`, generateHTML(report));
+    zip.file(`report_${report.reportId || 'draft'}.md`, generateMarkdown(report));
+    
+    // 2. Images folder
+    const imgFolder = zip.folder("attachments");
+    
+    // Collect all attachments from top-level and issues
+    const allAttachments = [
+        ...(report.attachments || []),
+        ...(report.issues || []).flatMap(i => i.attachments || [])
+    ];
+    
+    // Deduplicate by ID to avoid saving same file twice if referenced multiple times
+    const uniqueAttachments = Array.from(new Map(allAttachments.map(item => [item.id, item])).values());
+
+    uniqueAttachments.forEach(att => {
+        if (att.data) {
+            // Remove header "data:image/jpeg;base64," if present
+            const parts = att.data.split(',');
+            const base64Data = parts.length > 1 ? parts[1] : parts[0];
+            
+            if (base64Data) {
+                // Try to determine extension safely
+                let ext = "bin";
+                if (att.fileType === "image/jpeg" || att.fileType === "image/jpg") ext = "jpg";
+                else if (att.fileType === "image/png") ext = "png";
+                else if (att.fileName.includes(".")) ext = att.fileName.split('.').pop() || "bin";
+                
+                // Sanitize filename
+                const safeName = att.fileName.replace(/[^a-z0-9.]/gi, '_');
+                const filename = `${att.id.substring(0,8)}_${safeName}`;
+                
+                imgFolder?.file(filename, base64Data, {base64: true});
+            }
+        }
+    });
+    
+    return await zip.generateAsync({type: "blob"});
+}

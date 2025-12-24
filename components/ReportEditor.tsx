@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ServiceReport, Issue, Customer, Attachment, JOB_TYPES, ISSUE_CATEGORIES, PartEntry } from '../types';
 import { saveLocalReport, getLocalReport } from '../services/db';
@@ -258,10 +259,6 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
     try {
         let finalReport = { ...report };
         
-        // --- 1. Deep Merge with Defaults (Prevent Partial Objects) ---
-        // We create a fresh empty report and overlay existing data on top.
-        // This ensures missing fields (like 'softwareVersion' on machine) are present as empty strings.
-        
         const template = emptyReport(finalReport.createdBy, finalReport.technicianName);
         
         finalReport.machine = {
@@ -376,62 +373,73 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
     setRecording(false);
   };
 
-  if (loading) return <div className="p-10 flex justify-center"><div className="animate-spin-slow text-4xl"><i className="fa-solid fa-gear"></i></div></div>;
+  if (loading) return <div className="p-10 flex justify-center"><div className="animate-spin-slow text-4xl text-brand-600"><i className="fa-solid fa-gear"></i></div></div>;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-slate-100">
       {/* Toolbar */}
-      <div className="bg-white border-b px-6 py-3 flex justify-between items-center sticky top-0 z-40">
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <i className="fa-solid fa-arrow-left mr-2"></i> Back
-        </button>
-        <div className="flex items-center space-x-4">
-            <span className={`text-sm font-medium ${isError ? 'text-red-600' : 'text-gray-500'}`}>
+      <div className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-4">
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-800 transition-colors">
+                <i className="fa-solid fa-arrow-left mr-2"></i> Back
+            </button>
+            <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+            <div className="hidden sm:block">
+                <h2 className="text-lg font-bold text-slate-800 leading-none">{report.customer?.companyName || 'New Report'}</h2>
+                <div className="text-xs text-slate-400 mt-1 font-mono">{report.reportId || 'DRAFT'}</div>
+            </div>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+            <span className={`text-xs font-semibold mr-2 ${isError ? 'text-red-600' : 'text-slate-400'}`}>
                 {statusMsg}
             </span>
             <button 
                 onClick={() => saveDraft()} 
                 disabled={saving}
-                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
+                className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded shadow-sm hover:bg-slate-50 disabled:opacity-50 text-sm font-medium"
             >
                 {saving ? '...' : 'Save Draft'}
             </button>
             <button 
                 onClick={handleComplete} 
                 disabled={saving}
-                className="bg-brand-600 text-white px-4 py-2 rounded shadow-sm hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="bg-brand-600 text-white px-5 py-2 rounded shadow hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm font-bold tracking-wide transition-all active:scale-95"
             >
                 {saving ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>}
-                Complete & Export
+                COMPLETE
             </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6 space-y-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-8 space-y-6 max-w-6xl mx-auto w-full">
         
         {/* 1. Tech & Dates */}
-        <Section title="Technician & Dates" isOpen={sections.tech} onToggle={() => toggleSection('tech')}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Section title="Technician & Logistics" isOpen={sections.tech} onToggle={() => toggleSection('tech')} icon="fa-user-clock">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Technician</label>
-                    <input disabled value={report.technicianName} className="mt-1 block w-full rounded border-gray-300 bg-gray-100 p-2" />
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Technician</label>
+                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded p-2 text-slate-700">
+                        <i className="fa-solid fa-user-circle mr-2 text-slate-400"></i>
+                        {report.technicianName}
+                    </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Arrival Date</label>
-                    <input type="date" value={report.arrivalDate} onChange={e => handleChange('arrivalDate', e.target.value)} className="mt-1 block w-full rounded border border-gray-300 p-2" />
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Arrival Date</label>
+                    <input type="date" value={report.arrivalDate} onChange={e => handleChange('arrivalDate', e.target.value)} className="block w-full rounded border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Departure (Est.)</label>
-                    <input type="date" value={report.departureDate} onChange={e => handleChange('departureDate', e.target.value)} className="mt-1 block w-full rounded border border-gray-300 p-2" />
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Departure (Est.)</label>
+                    <input type="date" value={report.departureDate} onChange={e => handleChange('departureDate', e.target.value)} className="block w-full rounded border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm" />
                 </div>
             </div>
         </Section>
 
         {/* 2. Service Type */}
-        <Section title="Service Type" isOpen={sections.service} onToggle={() => toggleSection('service')}>
+        <Section title="Service Classification" isOpen={sections.service} onToggle={() => toggleSection('service')} icon="fa-tags">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {JOB_TYPES.map(type => (
-                    <label key={type} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                    <label key={type} className={`flex items-center space-x-2 p-3 border rounded cursor-pointer transition-all ${report.serviceTypes.includes(type) ? 'bg-brand-50 border-brand-200 text-brand-800' : 'hover:bg-slate-50 border-slate-200'}`}>
                         <input 
                             type="checkbox" 
                             checked={report.serviceTypes.includes(type)}
@@ -441,68 +449,67 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
                                     : report.serviceTypes.filter(t => t !== type);
                                 handleChange('serviceTypes', newTypes);
                             }}
-                            className="text-brand-600 focus:ring-brand-500 rounded"
+                            className="text-brand-600 focus:ring-brand-500 rounded border-gray-300"
                         />
-                        <span className="text-sm">{type}</span>
+                        <span className="text-sm font-medium">{type}</span>
                     </label>
                 ))}
             </div>
         </Section>
 
         {/* 3. Customer */}
-        <Section title="Customer Information" isOpen={sections.customer} onToggle={() => toggleSection('customer')}>
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Customer (Optional)</label>
-                <select onChange={handleCustomerSelect} className="w-full border-gray-300 rounded shadow-sm p-2 border">
-                    <option value="">-- Select --</option>
+        <Section title="Customer Information" isOpen={sections.customer} onToggle={() => toggleSection('customer')} icon="fa-building">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Load Existing Customer</label>
+                <select onChange={handleCustomerSelect} className="w-full border-slate-300 rounded shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm">
+                    <option value="">-- Select from Directory --</option>
                     {customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
                 </select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input label="Company Name" value={report.customer?.companyName || ''} onChange={v => handleChange('customer.companyName', v)} />
                 <Input label="Contact Person" value={report.customer?.contactPerson || ''} onChange={v => handleChange('customer.contactPerson', v)} />
-                <Input label="Position" value={report.customer?.position || ''} onChange={v => handleChange('customer.position', v)} />
-                <Input label="Phone" value={report.customer?.phone || ''} onChange={v => handleChange('customer.phone', v)} />
+                <Input label="Position / Title" value={report.customer?.position || ''} onChange={v => handleChange('customer.position', v)} />
+                <Input label="Phone Number" value={report.customer?.phone || ''} onChange={v => handleChange('customer.phone', v)} />
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Address</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Site Address</label>
                     <div className="flex gap-2">
-                        <textarea rows={3} className="mt-1 block w-full rounded border border-gray-300 p-2" value={report.customer?.address || ''} onChange={e => handleChange('customer.address', e.target.value)} />
+                        <textarea rows={2} className="block w-full rounded border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm" value={report.customer?.address || ''} onChange={e => handleChange('customer.address', e.target.value)} />
                         <button onClick={async () => {
                             const coords = await getCoordinatesForAddress(report.customer?.address || '');
                             if (coords) alert(`Verified Location: ${coords.lat}, ${coords.lng}`);
                             else alert("Could not verify address");
-                        }} className="mt-1 px-3 bg-gray-100 border rounded hover:bg-gray-200 text-sm h-fit self-start py-2" title="Verify Address with Gemini Maps"><i className="fa-solid fa-map-location-dot"></i></button>
+                        }} className="px-4 bg-white border border-slate-300 rounded hover:bg-slate-50 text-slate-600" title="Verify Address with Gemini Maps"><i className="fa-solid fa-map-location-dot"></i></button>
                     </div>
                 </div>
             </div>
         </Section>
 
         {/* 4. Machine */}
-        <Section title="Machine Information" isOpen={sections.machine} onToggle={() => toggleSection('machine')}>
-            <div className="flex justify-between items-start mb-4">
-                 <div></div>
+        <Section title="Machine Data" isOpen={sections.machine} onToggle={() => toggleSection('machine')} icon="fa-industry">
+            <div className="flex justify-between items-center mb-6 bg-slate-50 p-3 rounded border border-slate-200">
+                 <div className="text-xs text-slate-500 font-medium px-2">Ensure Serial # matches physical nameplate</div>
                  <div className="text-right">
                     <button 
                         onClick={() => nameplateInputRef.current?.click()}
                         disabled={scanningNameplate}
-                        className="flex items-center text-sm bg-brand-50 text-brand-700 px-3 py-1 rounded border border-brand-200 hover:bg-brand-100 disabled:opacity-50 mb-1"
+                        className="flex items-center text-xs font-bold uppercase tracking-wide bg-white text-brand-600 px-3 py-2 rounded border border-brand-200 hover:bg-brand-50 disabled:opacity-50 transition-colors shadow-sm"
                     >
                         {scanningNameplate ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-camera mr-2"></i>}
-                        {scanningNameplate ? 'Scanning...' : 'Scan Nameplate'}
+                        {scanningNameplate ? 'Analzying...' : 'Scan Nameplate'}
                     </button>
-                    <div className="text-[10px] text-gray-400">Photo will be attached to report</div>
                     <input type="file" accept="image/*" ref={nameplateInputRef} className="hidden" onChange={handleNameplateScan} />
                 </div>
             </div>
 
             {/* Display Attached Nameplates */}
             <div className="mb-4">
-                 <div className="flex flex-wrap gap-2">
+                 <div className="flex flex-wrap gap-4">
                     {(report.attachments || []).filter(a => a.fieldRef === 'machineNameplate').map(att => (
-                        <div key={att.id} className="relative group w-24 h-24 border rounded overflow-hidden shadow-sm">
+                        <div key={att.id} className="relative group w-32 h-24 border border-slate-200 rounded-lg overflow-hidden shadow-sm bg-white">
                              <img src={att.data || att.url} alt="Nameplate" className="w-full h-full object-cover" />
-                             <button onClick={() => removeAttachment(att.id)} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                                <i className="fa-solid fa-trash"></i>
+                             <button onClick={() => removeAttachment(att.id)} className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+                                <i className="fa-solid fa-trash text-xs"></i>
                             </button>
                             {att.uploading && (
                                 <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
@@ -514,7 +521,7 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
                  </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Input label="Serial Number" value={report.machine?.serialNumber || ''} onChange={v => handleChange('machine.serialNumber', v)} />
                 <Input label="Model Number" value={report.machine?.modelNumber || ''} onChange={v => handleChange('machine.modelNumber', v)} />
                 <Input label="Machine Type" value={report.machine?.machineType || ''} onChange={v => handleChange('machine.machineType', v)} />
@@ -524,17 +531,17 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
         </Section>
 
         {/* 5. Summary */}
-        <Section title="Summary / Reason for Visit" isOpen={sections.summary} onToggle={() => toggleSection('summary')}>
+        <Section title="Executive Summary / Scope" isOpen={sections.summary} onToggle={() => toggleSection('summary')} icon="fa-file-signature">
             <div className="relative">
                 <textarea 
-                    className="w-full border border-gray-300 rounded p-3 min-h-[200px]" 
-                    placeholder="Describe the overall purpose of the visit..."
+                    className="w-full border-slate-300 rounded shadow-sm p-4 min-h-[160px] focus:border-brand-500 focus:ring-brand-500 text-sm leading-relaxed" 
+                    placeholder="Describe the overall purpose of the visit, initial observations, and outcome..."
                     value={report.summary}
                     onChange={e => handleChange('summary', e.target.value)}
                 />
                 <button 
                     onClick={recording ? stopAudioRecording : startAudioRecording}
-                    className={`absolute bottom-3 right-3 p-2 rounded-full shadow-lg ${recording ? 'bg-red-500 animate-pulse text-white' : 'bg-brand-500 text-white hover:bg-brand-600'}`}
+                    className={`absolute bottom-4 right-4 p-3 rounded-full shadow-lg transition-all ${recording ? 'bg-red-500 animate-pulse text-white' : 'bg-slate-800 text-white hover:bg-brand-600'}`}
                     title="Dictate with Gemini"
                 >
                     <i className={`fa-solid ${recording ? 'fa-stop' : 'fa-microphone'}`}></i>
@@ -543,43 +550,53 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
         </Section>
 
         {/* 6. Issues */}
-        <Section title="Report Issues" isOpen={sections.issues} onToggle={() => toggleSection('issues')}>
+        <Section title="Report Issues" isOpen={sections.issues} onToggle={() => toggleSection('issues')} icon="fa-list-ul">
             {report.issues.length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded">
-                    <p className="text-gray-500 mb-3">No issues added yet.</p>
-                    <button onClick={() => setActiveIssueId('new')} className="text-brand-600 font-medium hover:underline">+ Add Your First Issue</button>
+                <div className="text-center py-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg">
+                    <div className="text-slate-300 text-4xl mb-3"><i className="fa-solid fa-clipboard-check"></i></div>
+                    <p className="text-slate-500 mb-4 font-medium">No issues documented yet.</p>
+                    <button onClick={() => setActiveIssueId('new')} className="text-white bg-brand-600 px-4 py-2 rounded shadow hover:bg-brand-700 text-sm font-bold">
+                        <i className="fa-solid fa-plus mr-2"></i> Add First Issue
+                    </button>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {report.issues.map(issue => (
-                        <div key={issue.id} onClick={() => setActiveIssueId(issue.id)} className="bg-white border rounded p-4 flex justify-between items-center cursor-pointer hover:shadow-md transition-shadow">
-                            <div>
-                                <h4 className="font-medium text-lg">{issue.title}</h4>
-                                <span className="text-sm text-gray-500">{issue.category}</span>
+                <div className="space-y-4">
+                    {report.issues.map((issue, idx) => (
+                        <div key={issue.id} onClick={() => setActiveIssueId(issue.id)} className="bg-white border border-slate-200 rounded-lg p-5 flex justify-between items-center cursor-pointer hover:shadow-md hover:border-brand-300 transition-all group">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${issue.resolved ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                    {idx + 1}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-slate-800 group-hover:text-brand-700 transition-colors">{issue.title || 'Untitled Issue'}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs text-slate-500 font-mono uppercase">{issue.category}</span>
+                                        {!issue.resolved && (
+                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider ${
+                                                issue.urgency === 'Critical' ? 'bg-red-600' : 
+                                                issue.urgency === 'High' ? 'bg-orange-500' : 'bg-yellow-500'
+                                            }`}>{issue.urgency}</span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                {!issue.resolved && (
-                                    <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
-                                        issue.urgency === 'Critical' ? 'bg-red-600' : 
-                                        issue.urgency === 'High' ? 'bg-orange-500' : 'bg-yellow-500'
-                                    }`}>{issue.urgency}</span>
-                                )}
-                                <span className={`px-2 py-1 rounded text-xs font-bold ${issue.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            <div className="flex items-center space-x-3">
+                                <span className={`px-2 py-1 rounded text-xs font-bold border ${issue.resolved ? 'bg-green-50 text-green-700 border-green-200' : 'bg-white text-slate-500 border-slate-200'}`}>
                                     {issue.resolved ? 'RESOLVED' : 'OPEN'}
                                 </span>
-                                <i className="fa-solid fa-chevron-right text-gray-300 ml-2"></i>
+                                <i className="fa-solid fa-chevron-right text-slate-300 group-hover:text-brand-500 transition-colors"></i>
                             </div>
                         </div>
                     ))}
-                    <button onClick={() => setActiveIssueId('new')} className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-500 rounded hover:border-brand-500 hover:text-brand-500 font-medium transition-colors">
-                        + Add Issue
+                    <button onClick={() => setActiveIssueId('new')} className="w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:border-brand-500 hover:text-brand-600 font-bold uppercase tracking-wide text-xs transition-colors mt-4">
+                        + Add Another Issue
                     </button>
                 </div>
             )}
         </Section>
 
         {/* 7. Parts (Global) */}
-        <Section title="Parts" isOpen={sections.parts} onToggle={() => toggleSection('parts')}>
+        <Section title="Parts" isOpen={sections.parts} onToggle={() => toggleSection('parts')} icon="fa-cogs">
             <PartsList 
                 parts={report.parts} 
                 onAdd={() => {
@@ -594,34 +611,39 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
         </Section>
 
         {/* 8. Other Information */}
-        <Section title="Other Information" isOpen={sections.other} onToggle={() => toggleSection('other')}>
+        <Section title="Follow Up & Suggestions" isOpen={sections.other} onToggle={() => toggleSection('other')} icon="fa-clipboard-list">
             <div className="space-y-8">
                 {/* Follow Up */}
-                <div className="flex items-center justify-between border p-4 rounded bg-yellow-50">
-                    <div>
-                        <span className="font-bold text-gray-800 block">Follow Up Required</span>
-                        <span className="text-sm text-gray-500">Flag for office admin attention</span>
+                <div className="flex items-center justify-between border border-yellow-200 p-5 rounded-lg bg-yellow-50">
+                    <div className="flex items-start gap-3">
+                        <div className="text-yellow-600 mt-1"><i className="fa-solid fa-bell"></i></div>
+                        <div>
+                            <span className="font-bold text-slate-800 block">Follow Up Required</span>
+                            <span className="text-sm text-slate-600">Flag this report for office admin attention</span>
+                        </div>
                     </div>
-                    <input 
-                        type="checkbox" 
-                        className="w-6 h-6 text-brand-600 rounded focus:ring-brand-500" 
-                        checked={report.followUpRequired} 
-                        onChange={e => handleChange('followUpRequired', e.target.checked)} 
-                    />
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={report.followUpRequired} onChange={e => handleChange('followUpRequired', e.target.checked)} />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    </label>
                 </div>
 
                 {/* Design Suggestion */}
-                <div className="border rounded-lg p-5 bg-gray-50/50">
-                     <h4 className="font-bold text-gray-700 mb-4 border-b pb-2">Design Suggestion</h4>
-                     <div className="grid grid-cols-1 gap-4">
-                         <TextArea label="Current Implementation" value={report.designSuggestion.current} onChange={v => handleChange('designSuggestion.current', v)} rows={3} />
-                         <TextArea label="Problem Identified" value={report.designSuggestion.problem} onChange={v => handleChange('designSuggestion.problem', v)} rows={3} />
-                         <TextArea label="Suggested Change" value={report.designSuggestion.change} onChange={v => handleChange('designSuggestion.change', v)} rows={3} />
+                <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+                     <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i className="fa-solid fa-lightbulb text-brand-600"></i> Design/Process Suggestion
+                     </h4>
+                     <div className="grid grid-cols-1 gap-5">
+                         <TextArea label="Current Implementation" value={report.designSuggestion.current} onChange={v => handleChange('designSuggestion.current', v)} rows={2} />
+                         <TextArea label="Problem Identified" value={report.designSuggestion.problem} onChange={v => handleChange('designSuggestion.problem', v)} rows={2} />
+                         <TextArea label="Suggested Change" value={report.designSuggestion.change} onChange={v => handleChange('designSuggestion.change', v)} rows={2} />
                      </div>
                 </div>
                 
                 {/* Internal Suggestion */}
-                <TextArea label="Internal Suggestion (Not shared with customer)" value={report.internalSuggestion} onChange={v => handleChange('internalSuggestion', v)} rows={4} />
+                <div className="bg-slate-50 p-4 rounded border border-slate-200">
+                    <TextArea label="Internal Notes (Not shared with customer)" value={report.internalSuggestion} onChange={v => handleChange('internalSuggestion', v)} rows={3} />
+                </div>
 
                 {/* Tools & Nameplates Lists */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -662,36 +684,36 @@ export const ReportEditor: React.FC<EditorProps> = ({ reportId, userEmail, userN
 
 // --- Subcomponents ---
 
-const Section: React.FC<{title: string, isOpen: boolean, onToggle: () => void, children: React.ReactNode}> = ({title, isOpen, onToggle, children}) => (
-    <div className="bg-white border rounded shadow-sm overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b flex justify-between items-center cursor-pointer select-none" onClick={onToggle}>
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+const Section: React.FC<{title: string, isOpen: boolean, onToggle: () => void, icon?: string, children: React.ReactNode}> = ({title, isOpen, onToggle, icon, children}) => (
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden transition-all">
+        <div className={`px-6 py-4 flex justify-between items-center cursor-pointer select-none ${isOpen ? 'bg-slate-50 border-b border-slate-100' : 'bg-white hover:bg-slate-50'}`} onClick={onToggle}>
+            <div className="flex items-center gap-3">
+                {icon && <div className="w-8 h-8 rounded bg-slate-100 text-slate-500 flex items-center justify-center"><i className={`fa-solid ${icon}`}></i></div>}
+                <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+            </div>
             <div className="flex items-center space-x-3">
-                <button className="text-xs font-medium text-brand-600 uppercase tracking-wide bg-white border border-brand-200 px-2 py-1 rounded shadow-sm hover:bg-brand-50">
-                    {isOpen ? 'Save & Collapse' : 'Expand'}
-                </button>
-                <i className={`fa-solid fa-chevron-down transition-transform ${isOpen ? 'rotate-180' : ''}`}></i>
+                <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}></i>
             </div>
         </div>
-        {isOpen && <div className="p-6">{children}</div>}
+        {isOpen && <div className="p-6 animate-fade-in">{children}</div>}
     </div>
 );
 
 const Input: React.FC<{label: string, value: string, onChange: (v: string) => void}> = ({label, value, onChange}) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide text-xs mb-1">{label}</label>
-        <input type="text" value={value} onChange={e => onChange(e.target.value)} className="mt-1 block w-full rounded border border-gray-300 p-2 focus:border-brand-500 focus:ring-brand-500" />
+        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wide">{label}</label>
+        <input type="text" value={value} onChange={e => onChange(e.target.value)} className="block w-full rounded border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm" />
     </div>
 );
 
 const TextArea: React.FC<{label: string, value: string, onChange: (v: string) => void, rows?: number}> = ({label, value, onChange, rows=3}) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide text-xs mb-1">{label}</label>
+        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wide">{label}</label>
         <textarea 
             rows={rows}
             value={value} 
             onChange={e => onChange(e.target.value)} 
-            className="mt-1 block w-full rounded border border-gray-300 p-2 focus:border-brand-500 focus:ring-brand-500" 
+            className="block w-full rounded border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm" 
         />
     </div>
 );
@@ -703,36 +725,36 @@ const PartsList: React.FC<{
     onRemove: (id: string) => void;
 }> = ({ parts, onAdd, onUpdate, onRemove }) => {
     return (
-        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-            <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
-                <h4 className="font-bold text-gray-700 uppercase tracking-wide text-sm">General Parts List</h4>
-                <button onClick={onAdd} className="text-xs bg-white border border-gray-300 px-2 py-1 rounded hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors">
-                    <i className="fa-solid fa-plus mr-1"></i> Add Part
+        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                <h4 className="font-bold text-slate-700 uppercase tracking-wide text-xs">Parts Inventory</h4>
+                <button onClick={onAdd} className="text-xs bg-white border border-slate-300 px-3 py-1 rounded hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors shadow-sm font-medium">
+                    <i className="fa-solid fa-plus mr-1"></i> Add Item
                 </button>
             </div>
             
             {parts.length === 0 ? (
-                <div className="p-6 text-center text-gray-400 text-sm">No parts listed</div>
+                <div className="p-8 text-center text-slate-400 text-sm bg-white">No parts added to this report.</div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-500 font-medium">
+                        <thead className="bg-slate-100 text-slate-500 font-bold uppercase text-xs">
                             <tr>
-                                <th className="px-4 py-2 w-1/4">Part #</th>
-                                <th className="px-4 py-2 w-1/3">Description</th>
-                                <th className="px-4 py-2 w-20">Qty</th>
-                                <th className="px-4 py-2">Notes</th>
+                                <th className="px-4 py-3 w-1/4">Part #</th>
+                                <th className="px-4 py-3 w-1/3">Description</th>
+                                <th className="px-4 py-3 w-20">Qty</th>
+                                <th className="px-4 py-3">Notes</th>
                                 <th className="w-10"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-slate-100 bg-white">
                             {parts.map(part => (
-                                <tr key={part.id}>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.partNumber} onChange={e => onUpdate(part.id, 'partNumber', e.target.value)} placeholder="Part #" /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.description} onChange={e => onUpdate(part.id, 'description', e.target.value)} placeholder="Desc" /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.quantity} onChange={e => onUpdate(part.id, 'quantity', e.target.value)} /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.notes} onChange={e => onUpdate(part.id, 'notes', e.target.value)} placeholder="Notes" /></td>
-                                    <td className="p-2 text-center"><button onClick={() => onRemove(part.id)} className="text-gray-300 hover:text-red-500"><i className="fa-solid fa-trash"></i></button></td>
+                                <tr key={part.id} className="hover:bg-slate-50">
+                                    <td className="p-2"><input className="w-full border-slate-300 rounded px-2 py-1 text-sm font-mono" value={part.partNumber} onChange={e => onUpdate(part.id, 'partNumber', e.target.value)} placeholder="XXX-XXX" /></td>
+                                    <td className="p-2"><input className="w-full border-slate-300 rounded px-2 py-1 text-sm" value={part.description} onChange={e => onUpdate(part.id, 'description', e.target.value)} placeholder="Part Name" /></td>
+                                    <td className="p-2"><input className="w-full border-slate-300 rounded px-2 py-1 text-sm text-center" value={part.quantity} onChange={e => onUpdate(part.id, 'quantity', e.target.value)} /></td>
+                                    <td className="p-2"><input className="w-full border-slate-300 rounded px-2 py-1 text-sm" value={part.notes} onChange={e => onUpdate(part.id, 'notes', e.target.value)} placeholder="Optional" /></td>
+                                    <td className="p-2 text-center"><button onClick={() => onRemove(part.id)} className="text-slate-300 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash"></i></button></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -759,22 +781,22 @@ const StringList: React.FC<{
     };
 
     return (
-        <div className="border rounded bg-white">
-            <div className="flex justify-between items-center bg-gray-50 px-3 py-2 border-b">
-                <span className="text-sm font-bold text-gray-600 uppercase tracking-wide">{title}</span>
-                <button onClick={handleAdd} className="text-brand-600 hover:text-brand-700"><i className="fa-solid fa-plus"></i></button>
+        <div className="border border-slate-200 rounded bg-white shadow-sm h-full flex flex-col">
+            <div className="flex justify-between items-center bg-slate-50 px-3 py-2 border-b border-slate-200 rounded-t">
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">{title}</span>
+                <button onClick={handleAdd} className="text-brand-600 hover:text-brand-700 bg-white border border-slate-200 w-6 h-6 flex items-center justify-center rounded shadow-sm text-xs"><i className="fa-solid fa-plus"></i></button>
             </div>
-            <div className="p-3 space-y-2">
-                {items.length === 0 && <p className="text-xs text-gray-400 italic">None added</p>}
+            <div className="p-3 space-y-2 flex-1">
+                {items.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">List is empty</p>}
                 {items.map(item => (
                     <div key={item.id} className="flex gap-2">
                         <input 
-                            className="flex-1 border rounded px-2 py-1 text-sm" 
+                            className="flex-1 border-slate-300 rounded px-2 py-1 text-sm focus:border-brand-500 focus:ring-brand-500" 
                             value={item.text} 
                             onChange={e => handleUpdate(item.id, e.target.value)}
-                            placeholder="Enter item..."
+                            placeholder="Type here..."
                         />
-                        <button onClick={() => handleDelete(item.id)} className="text-gray-400 hover:text-red-500"><i className="fa-solid fa-xmark"></i></button>
+                        <button onClick={() => handleDelete(item.id)} className="text-slate-300 hover:text-red-500 px-1"><i className="fa-solid fa-xmark"></i></button>
                     </div>
                 ))}
             </div>
