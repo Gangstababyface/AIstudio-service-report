@@ -23,7 +23,7 @@ const MOCK_USER: User = {
     role: 'ADMIN' 
 };
 
-const DEFAULT_CLIENT_ID = "592806790454-8jaqbc8js7481d72tk6ltde2fj60hmlb.apps.googleusercontent.com";
+const DEFAULT_CLIENT_ID = "406282253890-tmqmf4cagcqcctp65bocft8o0qmbippc.apps.googleusercontent.com";
 
 const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
