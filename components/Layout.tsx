@@ -14,16 +14,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, title,
   return (
     <div className="flex flex-col h-full bg-slate-100">
       {/* Dark Industrial Header */}
-      <header className="bg-[#111827] border-b border-black h-16 flex items-center justify-between sticky top-0 z-50 shadow-lg shrink-0">
-        <div className="flex items-center h-full">
-          {/* Logo Area - White Box */}
-          <div className="h-full bg-white px-4 flex items-center justify-center border-r border-slate-200">
-             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6942d9eb36db1e00f69ccffb/ffd8b423f_xovr-logo.png" alt="XOVR" className="h-14 w-auto object-contain" />
+      <header className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 h-16 flex items-center justify-between sticky top-0 z-50 shadow-lg shrink-0">
+        <div className="flex items-center h-full gap-4 pl-4">
+          {/* Logo with subtle background */}
+          <div className="bg-white/95 rounded-lg px-3 py-1.5 shadow-sm">
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6942d9eb36db1e00f69ccffb/ffd8b423f_xovr-logo.png" alt="XOVR" className="h-8 w-auto object-contain" />
           </div>
-          
+
           {/* Title Area */}
-          <div className="flex items-center px-8 h-full border-r border-slate-800 bg-slate-900/50">
-             <h1 className="text-sm font-black text-white tracking-[0.2em] uppercase">{title || 'DASHBOARD'}</h1>
+          <div className="flex items-center">
+             <h1 className="text-sm font-semibold text-slate-200 tracking-wide">{title || 'Service Report Pro'}</h1>
           </div>
         </div>
         
