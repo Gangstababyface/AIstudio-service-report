@@ -230,42 +230,42 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-5xl h-[95vh] rounded-lg shadow-2xl flex flex-col">
-                
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 w-full max-w-5xl h-[95vh] rounded-lg shadow-2xl flex flex-col border border-slate-700">
+
                 {/* Header */}
-                <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
+                <div className="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800 rounded-t-lg">
                     <div className="flex items-center space-x-3">
-                         <div className={`p-2 rounded-full ${issue.resolved ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                         <div className={`p-2 rounded-full ${issue.resolved ? 'bg-green-900/50 text-green-400' : 'bg-amber-900/50 text-amber-400'}`}>
                             <i className={`fa-solid ${issue.resolved ? 'fa-check' : 'fa-circle-exclamation'}`}></i>
                          </div>
                          <div>
-                            <h2 className="text-xl font-bold text-gray-800">{issueId === 'new' ? 'New Issue' : 'Edit Issue'}</h2>
-                            <p className="text-xs text-gray-500">{issue.title || 'Untitled'}</p>
+                            <h2 className="text-xl font-bold text-white">{issueId === 'new' ? 'New Issue' : 'Edit Issue'}</h2>
+                            <p className="text-xs text-slate-400">{issue.title || 'Untitled'}</p>
                          </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4">
                         <div className="flex items-center">
-                            <span className="text-sm font-medium text-gray-600 mr-3">Resolved</span>
-                            <button 
+                            <span className="text-sm font-medium text-slate-400 mr-3">Resolved</span>
+                            <button
                                 onClick={() => handleChange('resolved', !issue.resolved)}
-                                className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.resolved ? 'bg-black' : 'bg-gray-200'}`}
+                                className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.resolved ? 'bg-green-600' : 'bg-slate-600'}`}
                             >
                                 <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${issue.resolved ? 'translate-x-6' : ''}`}></div>
                             </button>
                         </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><i className="fa-solid fa-xmark text-xl"></i></button>
+                        <button onClick={onClose} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
                     </div>
                 </div>
 
                 {/* Tab Bar */}
-                <div className="flex border-b px-6 space-x-2 bg-gray-50 pt-2">
+                <div className="flex border-b border-slate-700 px-6 space-x-2 bg-slate-800 pt-2">
                     {tabs.map(t => (
-                        <button 
+                        <button
                             key={t.id}
                             onClick={() => setTab(t.id as any)}
-                            className={`px-4 py-2 text-sm font-medium rounded-t-lg flex items-center gap-2 transition-colors ${tab === t.id ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 shadow-sm relative top-[1px]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                            className={`px-4 py-2 text-sm font-medium rounded-t-lg flex items-center gap-2 transition-colors ${tab === t.id ? 'bg-slate-900 border-t border-l border-r border-slate-700 text-white shadow-sm relative top-[1px]' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
                         >
                             {/* Icons for tabs */}
                             {t.id === 'details' && <i className="fa-regular fa-file-lines"></i>}
@@ -279,7 +279,7 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-8 bg-white">
+                <div className="flex-1 overflow-y-auto p-8 bg-slate-900">
                     
                     {tab === 'details' && (
                         <div className="space-y-6 max-w-3xl mx-auto">
@@ -295,11 +295,11 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                             />
                             
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Category</label>
-                                <select 
-                                    value={issue.category} 
+                                <label className="block text-sm font-medium text-slate-300">Category</label>
+                                <select
+                                    value={issue.category}
                                     onChange={e => handleChange('category', e.target.value)}
-                                    className="mt-1 block w-full rounded border-gray-300 p-2 focus:ring-brand-500 focus:border-brand-500"
+                                    className="mt-1 block w-full rounded bg-slate-800 border-slate-600 text-white p-2 focus:ring-red-500 focus:border-red-500"
                                 >
                                     {ISSUE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
@@ -352,16 +352,16 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                             />
 
                             {!issue.resolved && (
-                                <div className="border-2 border-orange-300 rounded-lg p-6 relative">
-                                    <div className="flex items-center gap-3 mb-2 text-orange-600 font-bold uppercase tracking-wider text-sm">
+                                <div className="border-2 border-amber-700 rounded-lg p-6 relative bg-amber-900/20">
+                                    <div className="flex items-center gap-3 mb-2 text-amber-500 font-bold uppercase tracking-wider text-sm">
                                         <i className="fa-solid fa-triangle-exclamation"></i>
                                         Issue Urgency
                                     </div>
-                                    <p className="text-xs text-gray-500 mb-3">Classify the priority of this unresolved issue</p>
-                                    <select 
-                                        value={issue.urgency} 
+                                    <p className="text-xs text-slate-400 mb-3">Classify the priority of this unresolved issue</p>
+                                    <select
+                                        value={issue.urgency}
                                         onChange={e => handleChange('urgency', e.target.value)}
-                                        className="block w-full rounded border-orange-300 shadow-sm p-3 focus:border-orange-500 focus:ring-orange-500"
+                                        className="block w-full rounded bg-slate-800 border-amber-600 text-white shadow-sm p-3 focus:border-amber-500 focus:ring-amber-500"
                                     >
                                         <option value="Low">Low - Whenever</option>
                                         <option value="Medium">Medium - Soon</option>
@@ -372,19 +372,19 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                             )}
 
                             {issue.resolved ? (
-                                <div className="border-2 border-green-200 rounded-lg p-6 bg-green-50/30">
-                                    <h3 className="text-green-700 font-bold uppercase tracking-wider text-sm mb-1">
+                                <div className="border-2 border-green-700 rounded-lg p-6 bg-green-900/20">
+                                    <h3 className="text-green-400 font-bold uppercase tracking-wider text-sm mb-1">
                                         Resolution - What Actually Fixed It
                                     </h3>
-                                    <p className="text-xs text-gray-500 mb-6">Final solution that resolved the issue</p>
-                                    
+                                    <p className="text-xs text-slate-400 mb-6">Final solution that resolved the issue</p>
+
                                     <div className="space-y-6">
-                                        <ResolutionField 
+                                        <ResolutionField
                                             id="rootCause"
-                                            label="Root Cause" 
-                                            placeholder="What was actually wrong?" 
-                                            value={issue.rootCause} 
-                                            onChange={v => handleChange('rootCause', v)} 
+                                            label="Root Cause"
+                                            placeholder="What was actually wrong?"
+                                            value={issue.rootCause}
+                                            onChange={v => handleChange('rootCause', v)}
                                             rows={4}
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'rootCause')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'rootCause')}
@@ -392,12 +392,12 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             onToggleRecord={() => toggleRecording('rootCause')}
                                             isRecording={activeRecordingField === 'rootCause'}
                                         />
-                                        <ResolutionField 
+                                        <ResolutionField
                                             id="fixApplied"
-                                            label="Fix Applied" 
-                                            placeholder="The specific action that resolved it" 
-                                            value={issue.fixApplied} 
-                                            onChange={v => handleChange('fixApplied', v)} 
+                                            label="Fix Applied"
+                                            placeholder="The specific action that resolved it"
+                                            value={issue.fixApplied}
+                                            onChange={v => handleChange('fixApplied', v)}
                                             rows={4}
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'fixApplied')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'fixApplied')}
@@ -405,22 +405,22 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             onToggleRecord={() => toggleRecording('fixApplied')}
                                             isRecording={activeRecordingField === 'fixApplied'}
                                         />
-                                        <ResolutionField 
+                                        <ResolutionField
                                             id="verifiedBy"
-                                            label="Verified By" 
-                                            placeholder="Who confirmed it's working?" 
-                                            value={issue.verifiedBy} 
-                                            onChange={v => handleChange('verifiedBy', v)} 
+                                            label="Verified By"
+                                            placeholder="Who confirmed it's working?"
+                                            value={issue.verifiedBy}
+                                            onChange={v => handleChange('verifiedBy', v)}
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'verifiedBy')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'verifiedBy')}
                                             onRemoveAttachment={removeAttachment}
                                         />
-                                        <ResolutionField 
+                                        <ResolutionField
                                             id="notes"
-                                            label="Notes" 
-                                            placeholder="Any gotchas or things to watch for..." 
-                                            value={issue.notes} 
-                                            onChange={v => handleChange('notes', v)} 
+                                            label="Notes"
+                                            placeholder="Any gotchas or things to watch for..."
+                                            value={issue.notes}
+                                            onChange={v => handleChange('notes', v)}
                                             rows={4}
                                             onUpload={(files) => handleFileUpload(files, 'issue_photos', 'notes')}
                                             attachments={issue.attachments.filter(a => a.fieldRef === 'notes')}
@@ -429,19 +429,19 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                                             isRecording={activeRecordingField === 'notes'}
                                         />
                                     </div>
-                                    
-                                    <div className="mt-4 pt-4 border-t border-green-200">
+
+                                    <div className="mt-4 pt-4 border-t border-green-700">
                                         <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-sm font-medium text-gray-700">Solution Summary (Customer Facing)</label>
-                                            <button onClick={generateAiSummary} disabled={analyzing} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200 flex items-center">
+                                            <label className="block text-sm font-medium text-slate-300">Solution Summary (Customer Facing)</label>
+                                            <button onClick={generateAiSummary} disabled={analyzing} className="text-xs bg-purple-900/50 text-purple-400 px-2 py-1 rounded hover:bg-purple-800 flex items-center border border-purple-700">
                                                 <i className={`fa-solid fa-wand-magic-sparkles mr-1 ${analyzing ? 'fa-spin' : ''}`}></i> Generate with AI
                                             </button>
                                         </div>
-                                        <textarea rows={4} value={issue.solutionSummary} onChange={e => handleChange('solutionSummary', e.target.value)} className="block w-full rounded border-gray-300 p-2 bg-white" placeholder="A polished summary of the fix..." />
+                                        <textarea rows={4} value={issue.solutionSummary} onChange={e => handleChange('solutionSummary', e.target.value)} className="block w-full rounded bg-slate-800 border-slate-600 text-white p-2 placeholder:text-slate-500" placeholder="A polished summary of the fix..." />
                                     </div>
                                 </div>
                             ) : (
-                                <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 text-gray-400">
+                                <div className="border border-slate-700 rounded-lg p-6 bg-slate-800 text-slate-500">
                                     <div className="flex items-center gap-2 font-bold text-sm uppercase mb-1">
                                         <i className="fa-solid fa-lock"></i>
                                         Resolution - What Actually Fixed It
@@ -475,27 +475,27 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
 
                     {tab === 'other' && (
                         <div className="max-w-3xl mx-auto space-y-6">
-                            <div className="bg-white border rounded-lg p-4 flex justify-between items-center shadow-sm">
+                            <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 flex justify-between items-center shadow-lg">
                                 <div>
-                                    <h4 className="font-bold text-gray-800">Follow Up Required</h4>
-                                    <p className="text-sm text-gray-500">Flag this issue for office follow-up</p>
+                                    <h4 className="font-bold text-white">Follow Up Required</h4>
+                                    <p className="text-sm text-slate-400">Flag this issue for office follow-up</p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => handleChange('followUpRequired', !issue.followUpRequired)}
-                                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.followUpRequired ? 'bg-red-500' : 'bg-gray-300'}`}
+                                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.followUpRequired ? 'bg-red-600' : 'bg-slate-600'}`}
                                 >
                                     <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${issue.followUpRequired ? 'translate-x-6' : ''}`}></div>
                                 </button>
                             </div>
 
-                            <div className="bg-white border rounded-lg p-4 flex justify-between items-center shadow-sm">
+                            <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 flex justify-between items-center shadow-lg">
                                 <div>
-                                    <h4 className="font-bold text-gray-800">Add to MFG Report</h4>
-                                    <p className="text-sm text-gray-500">Include this issue in the manufacturer report artifact</p>
+                                    <h4 className="font-bold text-white">Add to MFG Report</h4>
+                                    <p className="text-sm text-slate-400">Include this issue in the manufacturer report artifact</p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => handleChange('addToMfgReport', !issue.addToMfgReport)}
-                                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.addToMfgReport ? 'bg-brand-600' : 'bg-gray-300'}`}
+                                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${issue.addToMfgReport ? 'bg-red-600' : 'bg-slate-600'}`}
                                 >
                                     <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${issue.addToMfgReport ? 'translate-x-6' : ''}`}></div>
                                 </button>
@@ -506,9 +506,9 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t bg-gray-50 rounded-b-lg flex justify-end space-x-3">
-                    <button onClick={onClose} className="px-4 py-2 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
-                    <button onClick={() => onSave(issue)} className="px-6 py-2 bg-red-600 text-white rounded shadow hover:bg-red-700 font-medium flex items-center">
+                <div className="px-6 py-4 border-t border-slate-700 bg-slate-800 rounded-b-lg flex justify-end space-x-3">
+                    <button onClick={onClose} className="px-4 py-2 bg-slate-700 border border-slate-600 rounded text-slate-300 hover:bg-slate-600 font-medium">Cancel</button>
+                    <button onClick={() => onSave(issue)} className="px-6 py-2 bg-red-600 text-white rounded shadow hover:bg-red-500 font-medium flex items-center">
                         <i className="fa-regular fa-floppy-disk mr-2"></i> Save Issue
                     </button>
                 </div>
@@ -528,11 +528,11 @@ const FieldAttachments: React.FC<{
     return (
         <div className="flex flex-wrap gap-2 mt-2">
             {attachments.map(att => (
-                <div key={att.id} className="relative group w-16 h-16 border rounded overflow-hidden">
+                <div key={att.id} className="relative group w-16 h-16 border border-slate-600 rounded overflow-hidden bg-slate-800">
                     {att.fileType.startsWith('image/') ? (
                         <img src={att.data || att.url} alt={att.fileName} className="w-full h-full object-cover" />
                     ) : (
-                         <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-xs text-center p-1 break-words leading-tight">
+                         <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500 text-xs text-center p-1 break-words leading-tight">
                             <div>
                                 <i className="fa-regular fa-file mb-1"></i>
                                 <div>{att.fileName.split('.').pop()}</div>
@@ -543,8 +543,8 @@ const FieldAttachments: React.FC<{
                         <i className="fa-solid fa-xmark text-sm"></i>
                     </button>
                     {att.uploading && (
-                         <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                            <i className="fa-solid fa-circle-notch fa-spin text-brand-600 text-xs"></i>
+                         <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center">
+                            <i className="fa-solid fa-circle-notch fa-spin text-red-500 text-xs"></i>
                         </div>
                     )}
                 </div>
@@ -555,9 +555,9 @@ const FieldAttachments: React.FC<{
 
 const Input: React.FC<{
     id?: string;
-    label: string; 
-    value: string; 
-    onChange: (v: string) => void; 
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
     placeholder?: string;
     onUpload?: (files: FileList | null) => void;
     attachments?: Attachment[];
@@ -566,18 +566,18 @@ const Input: React.FC<{
     const fileInputRef = useRef<HTMLInputElement>(null);
     return (
         <div className="relative">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">{label}</label>
+            <label className="block text-sm font-bold text-slate-300 uppercase tracking-wide mb-1">{label}</label>
             <div className="relative">
-                <input 
-                    type="text" 
-                    value={value} 
-                    onChange={e => onChange(e.target.value)} 
-                    className="block w-full rounded border-gray-300 p-2 pr-10 focus:ring-brand-500 focus:border-brand-500"
+                <input
+                    type="text"
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="block w-full rounded bg-slate-800 border-slate-600 text-white p-2 pr-10 focus:ring-red-500 focus:border-red-500 placeholder:text-slate-500"
                     placeholder={placeholder}
                 />
                 {onUpload && (
-                    <button 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-600 p-1"
+                    <button
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-500 p-1"
                         onClick={() => fileInputRef.current?.click()}
                         title="Add Photo"
                     >
@@ -607,16 +607,16 @@ const ListSection: React.FC<{
     <div>
         <div className="flex justify-between items-start mb-4">
             <div>
-                <h3 className="font-bold text-gray-700 uppercase tracking-wide">{title}</h3>
-                <p className="text-xs text-gray-500">{subtitle}</p>
+                <h3 className="font-bold text-slate-300 uppercase tracking-wide">{title}</h3>
+                <p className="text-xs text-slate-500">{subtitle}</p>
             </div>
-            <button onClick={onAdd} className="text-sm border border-gray-300 rounded px-3 py-1 hover:bg-gray-50 text-gray-600 bg-white">
+            <button onClick={onAdd} className="text-sm border border-slate-600 rounded px-3 py-1 hover:bg-red-600 hover:border-red-600 hover:text-white text-slate-400 bg-slate-800 transition-colors">
                 <i className="fa-solid fa-plus mr-1"></i> {btnLabel}
             </button>
         </div>
 
         {items.length === 0 ? (
-            <div className="text-center text-gray-400 py-4 text-sm font-medium">
+            <div className="text-center text-slate-500 py-4 text-sm font-medium">
                 {emptyLabel}
             </div>
         ) : (
@@ -624,19 +624,19 @@ const ListSection: React.FC<{
                 {items.map(item => (
                     <div key={item.id}>
                         <div className="flex gap-2 items-start">
-                            <input 
+                            <input
                                 value={item.text}
                                 onChange={(e) => onChange(item.id, e.target.value)}
-                                className="flex-1 rounded border-gray-300 p-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+                                className="flex-1 rounded bg-slate-800 border-slate-600 text-white p-2 text-sm focus:ring-red-500 focus:border-red-500 placeholder:text-slate-500"
                                 placeholder="Enter details..."
                                 autoFocus={item.text === ''}
                             />
                              {/* File Input Wrapper */}
-                             <label className="text-gray-400 hover:text-brand-600 px-2 py-2 cursor-pointer">
+                             <label className="text-slate-500 hover:text-red-500 px-2 py-2 cursor-pointer">
                                 <i className="fa-solid fa-camera"></i>
                                 <input type="file" hidden onChange={e => onUpload(item.id, e.target.files)} />
                              </label>
-                            <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-red-500 px-2 py-2">
+                            <button onClick={() => onDelete(item.id)} className="text-slate-500 hover:text-red-500 px-2 py-2">
                                 <i className="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -664,32 +664,32 @@ const ResolutionField: React.FC<{
     const fileInputRef = useRef<HTMLInputElement>(null);
     return (
         <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">{label}</label>
-            <div className="bg-white p-1 rounded border border-gray-300 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500 relative">
-                 <textarea 
+            <label className="block text-sm font-bold text-slate-400 mb-1">{label}</label>
+            <div className="bg-slate-800 p-1 rounded border border-slate-600 focus-within:ring-2 focus-within:ring-red-500/50 focus-within:border-red-500 relative">
+                 <textarea
                     rows={rows}
-                    className="block w-full border-none p-2 resize-none focus:ring-0 text-gray-800 placeholder-gray-400 sm:text-sm"
+                    className="block w-full border-none bg-transparent p-2 resize-none focus:ring-0 text-white placeholder-slate-500 sm:text-sm"
                     placeholder={placeholder}
                     value={value}
                     onChange={e => onChange(e.target.value)}
                 />
                 <div className="mt-1 flex items-center space-x-2">
-                     <button 
+                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-2 py-1 border border-slate-600 shadow-sm text-xs font-medium rounded text-slate-400 bg-slate-700 hover:bg-slate-600 hover:text-white transition-colors"
                      >
                         <i className="fa-solid fa-arrow-up-from-bracket mr-1"></i> Add Photo
                      </button>
                      {onToggleRecord && (
-                         <button 
+                         <button
                             onClick={onToggleRecord}
                             className={`inline-flex items-center px-2 py-1 border shadow-sm text-xs font-medium rounded transition-colors ${
-                                isRecording 
-                                ? 'bg-red-50 border-red-300 text-red-600 animate-pulse' 
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                isRecording
+                                ? 'bg-red-900/50 border-red-600 text-red-400 animate-pulse'
+                                : 'bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600 hover:text-white'
                             }`}
                          >
-                            <i className={`fa-solid ${isRecording ? 'fa-stop' : 'fa-microphone'} mr-1`}></i> 
+                            <i className={`fa-solid ${isRecording ? 'fa-stop' : 'fa-microphone'} mr-1`}></i>
                             {isRecording ? 'Stop Recording' : 'Dictate'}
                          </button>
                      )}
@@ -712,8 +712,8 @@ const MediaBucket: React.FC<{
     const inputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div 
-            className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer min-h-[150px] flex flex-col"
+        <div
+            className="border-2 border-dashed border-slate-600 rounded-lg p-4 bg-slate-800 hover:bg-slate-700 hover:border-slate-500 transition-colors cursor-pointer min-h-[150px] flex flex-col"
             onClick={() => inputRef.current?.click()}
             onDragOver={e => e.preventDefault()}
             onDrop={e => {
@@ -722,38 +722,38 @@ const MediaBucket: React.FC<{
             }}
         >
             <div className="flex justify-between items-start mb-2 pointer-events-none">
-                <h4 className="font-bold text-gray-700 text-sm uppercase">{title}</h4>
-                <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{relevant.length}</span>
+                <h4 className="font-bold text-slate-300 text-sm uppercase">{title}</h4>
+                <span className="bg-slate-700 text-slate-400 text-xs px-2 py-0.5 rounded-full">{relevant.length}</span>
             </div>
-            
+
             <input type="file" multiple className="hidden" ref={inputRef} onChange={e => onUpload(e.target.files, bucket)} />
 
             {relevant.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400 pointer-events-none">
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 pointer-events-none">
                     <i className="fa-solid fa-cloud-arrow-up text-2xl mb-1"></i>
                     <span className="text-xs">Drag files or click to upload</span>
                 </div>
             ) : (
                 <div className="grid grid-cols-3 gap-2 mt-2" onClick={e => e.stopPropagation()}>
                     {relevant.map(att => (
-                        <div key={att.id} className="relative group bg-white border rounded overflow-hidden aspect-square flex items-center justify-center">
+                        <div key={att.id} className="relative group bg-slate-900 border border-slate-600 rounded overflow-hidden aspect-square flex items-center justify-center">
                             {att.fileType.startsWith('image/') ? (
                                 <img src={att.data || att.url} alt={att.fileName} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="text-center p-1">
-                                    <i className="fa-regular fa-file text-xl text-gray-400 mb-1"></i>
-                                    <p className="text-[9px] truncate w-full px-1">{att.fileName}</p>
+                                    <i className="fa-regular fa-file text-xl text-slate-500 mb-1"></i>
+                                    <p className="text-[9px] truncate w-full px-1 text-slate-400">{att.fileName}</p>
                                 </div>
                             )}
-                            
+
                             {/* Overlay */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
                                 <button onClick={() => onRemove(att.id)} className="text-white hover:text-red-400"><i className="fa-solid fa-trash"></i></button>
                             </div>
 
                             {att.uploading && (
-                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <i className="fa-solid fa-circle-notch fa-spin text-brand-500"></i>
+                                <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center">
+                                    <i className="fa-solid fa-circle-notch fa-spin text-red-500"></i>
                                 </div>
                             )}
                         </div>
@@ -775,20 +775,20 @@ const PartsList: React.FC<{
     const relevant = parts.filter(p => p.type === type);
 
     return (
-        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-            <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
-                <h4 className="font-bold text-gray-700 uppercase tracking-wide text-sm">{title}</h4>
-                <button onClick={onAdd} className="text-xs bg-white border border-gray-300 px-2 py-1 rounded hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors">
+        <div className="border border-slate-700 rounded-lg overflow-hidden bg-slate-800 shadow-lg">
+            <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                <h4 className="font-bold text-slate-300 uppercase tracking-wide text-sm">{title}</h4>
+                <button onClick={onAdd} className="text-xs bg-slate-700 border border-slate-600 text-slate-300 px-2 py-1 rounded hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">
                     <i className="fa-solid fa-plus mr-1"></i> Add Part
                 </button>
             </div>
-            
+
             {relevant.length === 0 ? (
-                <div className="p-6 text-center text-gray-400 text-sm">No parts listed</div>
+                <div className="p-6 text-center text-slate-500 text-sm">No parts listed</div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-500 font-medium">
+                        <thead className="bg-slate-700 text-slate-400 font-medium">
                             <tr>
                                 <th className="px-4 py-2 w-1/4">Part #</th>
                                 <th className="px-4 py-2 w-1/3">Description</th>
@@ -797,14 +797,14 @@ const PartsList: React.FC<{
                                 <th className="w-10"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-slate-700">
                             {relevant.map(part => (
-                                <tr key={part.id}>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.partNumber} onChange={e => onUpdate(part.id, 'partNumber', e.target.value)} placeholder="Part #" /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.description} onChange={e => onUpdate(part.id, 'description', e.target.value)} placeholder="Desc" /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.quantity} onChange={e => onUpdate(part.id, 'quantity', e.target.value)} /></td>
-                                    <td className="p-2"><input className="w-full border rounded px-2 py-1" value={part.notes} onChange={e => onUpdate(part.id, 'notes', e.target.value)} placeholder="Notes" /></td>
-                                    <td className="p-2 text-center"><button onClick={() => onRemove(part.id)} className="text-gray-300 hover:text-red-500"><i className="fa-solid fa-trash"></i></button></td>
+                                <tr key={part.id} className="hover:bg-slate-700">
+                                    <td className="p-2"><input className="w-full bg-slate-900 border-slate-600 text-white rounded px-2 py-1 placeholder:text-slate-500" value={part.partNumber} onChange={e => onUpdate(part.id, 'partNumber', e.target.value)} placeholder="Part #" /></td>
+                                    <td className="p-2"><input className="w-full bg-slate-900 border-slate-600 text-white rounded px-2 py-1 placeholder:text-slate-500" value={part.description} onChange={e => onUpdate(part.id, 'description', e.target.value)} placeholder="Desc" /></td>
+                                    <td className="p-2"><input className="w-full bg-slate-900 border-slate-600 text-white rounded px-2 py-1 text-center" value={part.quantity} onChange={e => onUpdate(part.id, 'quantity', e.target.value)} /></td>
+                                    <td className="p-2"><input className="w-full bg-slate-900 border-slate-600 text-white rounded px-2 py-1 placeholder:text-slate-500" value={part.notes} onChange={e => onUpdate(part.id, 'notes', e.target.value)} placeholder="Notes" /></td>
+                                    <td className="p-2 text-center"><button onClick={() => onRemove(part.id)} className="text-slate-500 hover:text-red-500"><i className="fa-solid fa-trash"></i></button></td>
                                 </tr>
                             ))}
                         </tbody>
