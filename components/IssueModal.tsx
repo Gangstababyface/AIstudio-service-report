@@ -260,14 +260,17 @@ export const IssueModal: React.FC<ModalProps> = ({ issueId, existingIssues, onSa
                 </div>
 
                 {/* Tab Bar */}
-                <div className="flex border-b border-slate-700 px-6 space-x-2 bg-slate-800 pt-2">
+                <div className="flex overflow-x-auto border-b border-slate-700 px-4 bg-slate-800 gap-1">
                     {tabs.map(t => (
                         <button
                             key={t.id}
                             onClick={() => setTab(t.id as any)}
-                            className={`px-4 py-2 text-sm font-medium rounded-t-lg flex items-center gap-2 transition-colors ${tab === t.id ? 'bg-slate-900 border-t border-l border-r border-slate-700 text-white shadow-sm relative top-[1px]' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                            className={`px-3 py-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors flex-shrink-0 ${
+                                tab === t.id
+                                    ? 'text-white border-b-2 border-red-500'
+                                    : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent'
+                            }`}
                         >
-                            {/* Icons for tabs */}
                             {t.id === 'details' && <i className="fa-regular fa-file-lines"></i>}
                             {t.id === 'solutions' && <i className="fa-regular fa-lightbulb"></i>}
                             {t.id === 'media' && <i className="fa-regular fa-image"></i>}
