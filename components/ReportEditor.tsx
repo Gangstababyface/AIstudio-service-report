@@ -703,8 +703,16 @@ const Section: React.FC<{title: string, isOpen: boolean, onToggle: () => void, i
                 {icon && <div className="w-8 h-8 rounded bg-slate-800 text-red-500 flex items-center justify-center"><i className={`fa-solid ${icon}`}></i></div>}
                 <h3 className="text-lg font-bold text-white">{title}</h3>
             </div>
-            <div className="flex items-center space-x-3">
-                <i className={`fa-solid fa-chevron-down text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}></i>
+            <div className="flex items-center gap-2">
+                {isOpen ? (
+                    <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5 bg-slate-700 px-2 py-1 rounded hover:bg-slate-600 transition-colors">
+                        <i className="fa-solid fa-floppy-disk"></i>
+                        Save & Collapse
+                        <i className="fa-solid fa-chevron-up"></i>
+                    </span>
+                ) : (
+                    <i className="fa-solid fa-chevron-down text-slate-500"></i>
+                )}
             </div>
         </div>
         {isOpen && <div className="p-6 animate-fade-in bg-slate-900">{children}</div>}
