@@ -385,11 +385,10 @@ const App: React.FC = () => {
 
     return (
         <Layout user={user} onLogout={() => setUser(null)} title="Dashboard" actions={
-            <div className="flex gap-2">
-                <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-red-600 text-white px-2.5 py-1 rounded text-[10px] font-medium shadow hover:bg-red-500 transition-colors">
-                    <i className="fa-solid fa-plus mr-1"></i> New Report
-                </button>
-            </div>
+            <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow hover:bg-red-500 transition-colors flex items-center gap-1.5">
+                <i className="fa-solid fa-plus"></i>
+                <span>New Report</span>
+            </button>
         }>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Dashboard Area */}
