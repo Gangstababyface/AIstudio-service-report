@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import type { AuthContextValue, AuthUser, AuthState } from './types';
-import { mapSupabaseUser } from './utils';
+import { mapSupabaseUserAsync } from './utils';
 
 const initialState: AuthState = {
   user: null,
@@ -29,8 +29,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (session?.user) {
+          // Fetch user data from public.users table (includes role)
+          const authUser = await mapSupabaseUserAsync(session.user);
           setState({
-            user: mapSupabaseUser(session.user),
+            user: authUser,
             loading: false,
             error: null,
           });
@@ -57,8 +59,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
+          // Fetch user data from public.users table
+          const authUser = await mapSupabaseUserAsync(session.user);
           setState({
-            user: mapSupabaseUser(session.user),
+            user: authUser,
             loading: false,
             error: null,
           });
@@ -69,10 +73,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             error: null,
           });
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          // Update user data on token refresh (role might have changed)
+          // Re-fetch user data on token refresh (role might have changed)
+          const authUser = await mapSupabaseUserAsync(session.user);
           setState((prev) => ({
             ...prev,
-            user: mapSupabaseUser(session.user),
+            user: authUser,
           }));
         }
       }

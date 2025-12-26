@@ -9,6 +9,7 @@ import { generateUUID } from './utils/helpers';
 import { generateHTML, generateMarkdown } from './utils/exportUtils';
 import { useAuth, RequireAuth, RequireAdmin, LoginPage } from './src/auth';
 import { AuthDebugPanel } from './src/components/AuthDebugPanel';
+import { AdminUsersPanel } from './src/components/AdminUsersPanel';
 
 const App: React.FC = () => {
     const { user, loading, signOut } = useAuth();
@@ -298,19 +299,12 @@ const App: React.FC = () => {
                                     </span>
                                     <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
                                 </button>
-
-                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium py-2 px-2.5 rounded-lg flex items-center justify-between transition-colors">
-                                    <span><i className="fa-solid fa-users-gear mr-1.5"></i> Manage Techs</span>
-                                    <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
-                                </button>
-
-                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium py-2 px-2.5 rounded-lg flex items-center justify-between transition-colors">
-                                    <span><i className="fa-solid fa-list-check mr-1.5"></i> Edit Categories</span>
-                                    <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
-                                </button>
                             </div>
                         </div>
                     </RequireAdmin>
+
+                    {/* User Management Panel */}
+                    <AdminUsersPanel />
                 </div>
             </div>
         </Layout>
