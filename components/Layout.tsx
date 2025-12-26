@@ -46,6 +46,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, title,
                 />
                 <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
               </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded hover:bg-slate-800"
+                  title="Sign out"
+                >
+                  <i className="fa-solid fa-right-from-bracket"></i>
+                </button>
+              )}
             </div>
           )}
         </div>
