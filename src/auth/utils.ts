@@ -8,27 +8,16 @@ import { supabase } from '../lib/supabase';
  * This is the source of truth for role.
  */
 export async function fetchUserFromDB(userId: string): Promise<{ name: string; role: UserRole } | null> {
-  console.log('[Auth] Fetching user from DB, userId:', userId);
-
-  const { data, error, status } = await supabase
+  const { data, error } = await supabase
     .from('users')
     .select('name, role')
     .eq('id', userId)
     .maybeSingle();
 
-  console.log('[Auth] DB query result:', { data, error, status });
-
-  if (error) {
-    console.error('[Auth] DB query error:', error.message, error.code, error.details);
+  if (error || !data) {
     return null;
   }
 
-  if (!data) {
-    console.warn('[Auth] No user found in DB for id:', userId);
-    return null;
-  }
-
-  console.log('[Auth] Found user in DB:', data.name, 'role:', data.role);
   return {
     name: data.name,
     role: data.role === 'admin' ? 'ADMIN' : 'TECHNICIAN',
