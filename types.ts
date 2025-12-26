@@ -1,7 +1,8 @@
 
-export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
+export type UserRole = 'ADMIN' | 'TECHNICIAN';
 
 export interface User {
+  id?: string;
   email: string;
   name: string;
   picture?: string;
