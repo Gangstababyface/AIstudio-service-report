@@ -385,7 +385,7 @@ const App: React.FC = () => {
 
     return (
         <Layout user={user} onLogout={() => setUser(null)} title="Dashboard" actions={
-            <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow hover:bg-red-500 transition-colors flex items-center gap-1.5">
+            <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow hover:bg-green-500 transition-colors flex items-center gap-1.5">
                 <i className="fa-solid fa-plus"></i>
                 <span>New Report</span>
             </button>
