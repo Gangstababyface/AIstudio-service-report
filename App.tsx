@@ -386,56 +386,56 @@ const App: React.FC = () => {
     return (
         <Layout user={user} onLogout={() => setUser(null)} title="Dashboard" actions={
             <div className="flex gap-2">
-                <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:bg-red-500 transition-colors">
-                    <i className="fa-solid fa-plus mr-2"></i> New Report
+                <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-red-600 text-white px-2.5 py-1 rounded text-[10px] font-medium shadow hover:bg-red-500 transition-colors">
+                    <i className="fa-solid fa-plus mr-1"></i> New Report
                 </button>
             </div>
         }>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Dashboard Area */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-lg p-6">
-                        <div className="flex justify-between items-center mb-4">
-                             <h2 className="text-lg font-semibold text-white">Recent Reports</h2>
-                             <button onClick={loadReports} className="text-slate-500 hover:text-red-500 transition-colors"><i className="fa-solid fa-rotate-right"></i></button>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-lg p-5">
+                        <div className="flex justify-between items-center mb-3">
+                             <h2 className="text-base font-semibold text-white">Recent Reports</h2>
+                             <button onClick={loadReports} className="text-slate-500 hover:text-red-500 transition-colors text-sm"><i className="fa-solid fa-rotate-right"></i></button>
                         </div>
 
                         {loadingReports ? (
-                            <div className="py-8 text-center text-slate-500"><i className="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>
+                            <div className="py-6 text-center text-slate-500 text-xs"><i className="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>
                         ) : reports.length === 0 ? (
-                            <div className="border border-dashed border-slate-700 rounded-lg p-8 text-center">
-                                <p className="text-slate-500 italic">No recent reports found locally.</p>
-                                <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="mt-2 text-red-500 hover:underline text-sm">Create your first report</button>
+                            <div className="border border-dashed border-slate-700 rounded-lg p-6 text-center">
+                                <p className="text-slate-500 italic text-xs">No recent reports found locally.</p>
+                                <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="mt-2 text-red-500 hover:underline text-xs">Create your first report</button>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 {reports.map(report => (
                                     <div
                                         key={report.id}
                                         onClick={() => { setCurrentReportId(report.id); setView('editor'); }}
-                                        className="border border-slate-700 rounded-lg p-4 hover:border-red-500/50 hover:bg-slate-800/50 transition-all cursor-pointer bg-slate-800/30 group relative"
+                                        className="border border-slate-700 rounded-lg p-3 hover:border-red-500/50 hover:bg-slate-800/50 transition-all cursor-pointer bg-slate-800/30 group relative"
                                     >
-                                        <div className="flex justify-between items-start mb-2">
+                                        <div className="flex justify-between items-start mb-1.5">
                                             <div>
-                                                <h3 className="font-bold text-white">
+                                                <h3 className="font-bold text-white text-sm">
                                                     {report.customer?.companyName || 'Unassigned Customer'}
                                                 </h3>
-                                                <div className="text-xs text-slate-500 flex items-center gap-2">
+                                                <div className="text-[10px] text-slate-500 flex items-center gap-2">
                                                     <span><i className="fa-regular fa-calendar mr-1"></i> {report.arrivalDate}</span>
                                                     <span>•</span>
                                                     <span className="font-mono">{report.reportId || 'Draft'}</span>
                                                 </div>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${report.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-slate-700 text-slate-400 border border-slate-600'}`}>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${report.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-slate-700 text-slate-400 border border-slate-600'}`}>
                                                 {report.status}
                                             </span>
                                         </div>
-                                        <div className="text-sm text-slate-400 line-clamp-2 mb-2">
+                                        <div className="text-xs text-slate-400 line-clamp-2 mb-1.5">
                                             {report.summary || 'No summary provided...'}
                                         </div>
 
                                         {/* Actions Footer */}
-                                        <div className="flex justify-between items-center text-xs text-slate-500 border-t border-slate-700 pt-2 mt-2">
+                                        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-700 pt-1.5 mt-1.5">
                                             <span>Issues: {report.issues?.length || 0}</span>
 
                                             {report.status === 'COMPLETED' && (
@@ -467,8 +467,8 @@ const App: React.FC = () => {
                         )}
                     </div>
 
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide">System Status</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide">System Status</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <StatusCard icon="fa-wifi" label="WorkDrive Connection" status="Connected" color="green" />
                         <StatusCard icon="fa-database" label="Local Cache" status="Active" color="green" />
                         <StatusCard icon="fa-bolt" label="Gemini AI" status="Ready" color="red" />
@@ -476,37 +476,37 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Admin / Sidebar Area */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {user.role === 'ADMIN' && (
-                        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl shadow-lg p-5">
-                            <h3 className="font-bold text-sm uppercase tracking-wider mb-4 border-b border-slate-700 pb-2 flex items-center text-red-500">
+                        <div className="bg-slate-900 border border-slate-800 text-white rounded-xl shadow-lg p-4">
+                            <h3 className="font-bold text-xs uppercase tracking-wider mb-3 border-b border-slate-700 pb-2 flex items-center text-red-500">
                                 <i className="fa-solid fa-user-shield mr-2"></i> Admin Tools
                             </h3>
-                            <p className="text-xs text-slate-400 mb-4">
+                            <p className="text-[10px] text-slate-400 mb-3">
                                 Use these tools to manage system configuration and stress-test the application.
                             </p>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <button
                                     onClick={handleGenerateTestReport}
                                     disabled={generating}
-                                    className="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-900 disabled:text-red-300 text-white text-sm font-medium py-2.5 px-3 rounded-lg flex items-center justify-between transition-colors"
+                                    className="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-900 disabled:text-red-300 text-white text-xs font-medium py-2 px-2.5 rounded-lg flex items-center justify-between transition-colors"
                                 >
                                     <span>
-                                        {generating ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-robot mr-2"></i>}
+                                        {generating ? <i className="fa-solid fa-circle-notch fa-spin mr-1.5"></i> : <i className="fa-solid fa-robot mr-1.5"></i>}
                                         {generating ? 'Generating...' : 'Gen. Edge Case Report'}
                                     </span>
-                                    <i className="fa-solid fa-chevron-right text-xs opacity-50"></i>
+                                    <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
                                 </button>
 
-                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-medium py-2.5 px-3 rounded-lg flex items-center justify-between transition-colors">
-                                    <span><i className="fa-solid fa-users-gear mr-2"></i> Manage Techs</span>
-                                    <i className="fa-solid fa-chevron-right text-xs opacity-50"></i>
+                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium py-2 px-2.5 rounded-lg flex items-center justify-between transition-colors">
+                                    <span><i className="fa-solid fa-users-gear mr-1.5"></i> Manage Techs</span>
+                                    <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
                                 </button>
 
-                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-medium py-2.5 px-3 rounded-lg flex items-center justify-between transition-colors">
-                                    <span><i className="fa-solid fa-list-check mr-2"></i> Edit Categories</span>
-                                    <i className="fa-solid fa-chevron-right text-xs opacity-50"></i>
+                                <button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium py-2 px-2.5 rounded-lg flex items-center justify-between transition-colors">
+                                    <span><i className="fa-solid fa-list-check mr-1.5"></i> Edit Categories</span>
+                                    <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
                                 </button>
                             </div>
                         </div>
@@ -518,13 +518,13 @@ const App: React.FC = () => {
 };
 
 const StatusCard: React.FC<{icon: string, label: string, status: string, color: string}> = ({icon, label, status, color}) => (
-    <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg flex items-center space-x-3">
-        <div className={`w-10 h-10 rounded-lg bg-${color}-500/20 flex items-center justify-center text-${color}-400 border border-${color}-500/30`}>
+    <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-lg flex items-center space-x-2.5">
+        <div className={`w-8 h-8 rounded-lg bg-${color}-500/20 flex items-center justify-center text-${color}-400 border border-${color}-500/30 text-sm`}>
             <i className={`fa-solid ${icon}`}></i>
         </div>
         <div>
-            <div className="text-xs text-slate-500 uppercase">{label}</div>
-            <div className="font-semibold text-white">{status}</div>
+            <div className="text-[10px] text-slate-500 uppercase">{label}</div>
+            <div className="font-semibold text-white text-sm">{status}</div>
         </div>
     </div>
 );
