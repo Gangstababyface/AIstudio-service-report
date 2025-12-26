@@ -2,28 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { ReportEditor } from './components/ReportEditor';
-import { User, ServiceReport, Issue, PartEntry, Customer } from './types';
+import { User, ServiceReport, Customer } from './types';
 import { saveLocalReport, getAllLocalReports } from './services/db';
 import { generateEdgeCaseReportContent } from './services/geminiService';
 import { fetchCustomerDirectory } from './services/workDriveService';
 import { generateUUID } from './utils/helpers';
 import { generateHTML, generateMarkdown } from './utils/exportUtils';
-
-// Define window.google for TypeScript
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+import { supabase, getUserProfile } from './src/lib/supabase';
 
 // Mock Auth for Fallback
 const MOCK_USER: User = {
     email: 'tech@xovrcncparts.com',
     name: 'Alex Technician',
-    role: 'ADMIN' 
+    role: 'ADMIN'
 };
-
-const DEFAULT_CLIENT_ID = "406282253890-tmqmf4cagcqcctp65bocft8o0qmbippc.apps.googleusercontent.com";
 
 const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
@@ -32,16 +24,57 @@ const App: React.FC = () => {
     const [generating, setGenerating] = useState(false);
     const [reports, setReports] = useState<ServiceReport[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
-    
-    // Auth Configuration State
-    const [clientId, setClientId] = useState(DEFAULT_CLIENT_ID);
-    const [scriptLoaded, setScriptLoaded] = useState(false);
-    const [showAuthConfig, setShowAuthConfig] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
 
     // Manual Login State (Dev Fallback)
     const [showManualLogin, setShowManualLogin] = useState(false);
     const [manualName, setManualName] = useState('');
     const [manualEmail, setManualEmail] = useState('');
+
+    // Check Supabase session on mount
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session?.user) {
+                    // Get profile with role from our profiles table
+                    const profile = await getUserProfile(session.user.id);
+
+                    setUser({
+                        email: session.user.email || '',
+                        name: profile?.name || session.user.user_metadata?.full_name || session.user.email || '',
+                        picture: session.user.user_metadata?.avatar_url,
+                        role: (profile?.role?.toUpperCase() as 'ADMIN' | 'USER' | 'SUPER_ADMIN') || 'USER'
+                    });
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+            } finally {
+                setAuthLoading(false);
+            }
+        };
+
+        checkSession();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+                const profile = await getUserProfile(session.user.id);
+
+                setUser({
+                    email: session.user.email || '',
+                    name: profile?.name || session.user.user_metadata?.full_name || session.user.email || '',
+                    picture: session.user.user_metadata?.avatar_url,
+                    role: (profile?.role?.toUpperCase() as 'ADMIN' | 'USER' | 'SUPER_ADMIN') || 'USER'
+                });
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     // Initial Load of Reports
     useEffect(() => {
@@ -50,77 +83,10 @@ const App: React.FC = () => {
         }
     }, [user, view]);
 
-    // robust script loading check
-    useEffect(() => {
-        const checkScript = () => {
-            if (window.google?.accounts?.id) {
-                setScriptLoaded(true);
-                return true;
-            }
-            return false;
-        };
-
-        if (!checkScript()) {
-            const timer = setInterval(() => {
-                if (checkScript()) clearInterval(timer);
-            }, 200);
-            return () => clearInterval(timer);
-        }
-    }, []);
-
-    // Google Auth Initialization
-    useEffect(() => {
-        if (!user && scriptLoaded && clientId && !showManualLogin) {
-            const handleCredentialResponse = (response: any) => {
-                try {
-                    // Decode JWT Payload
-                    const base64Url = response.credential.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-
-                    const payload = JSON.parse(jsonPayload);
-
-                    setUser({
-                        email: payload.email,
-                        name: payload.name,
-                        picture: payload.picture,
-                        role: 'ADMIN' // Default to Admin for this demo app
-                    });
-                } catch (e) {
-                    console.error("Failed to decode Google Credential", e);
-                    alert("Failed to decode Google login token.");
-                }
-            };
-
-            try {
-                window.google.accounts.id.initialize({
-                    client_id: clientId,
-                    callback: handleCredentialResponse,
-                    auto_select: false,
-                    cancel_on_tap_outside: true
-                });
-
-                const btnParent = document.getElementById("googleSignInBtn");
-                if (btnParent) {
-                    btnParent.innerHTML = ''; // Clear previous instances
-                    window.google.accounts.id.renderButton(
-                        btnParent,
-                        { theme: "outline", size: "large", width: 280, text: "signin_with" }
-                    );
-                }
-            } catch (err) {
-                console.error("Google Auth Init Error:", err);
-            }
-        }
-    }, [user, scriptLoaded, clientId, showManualLogin]);
-
     const loadReports = async () => {
         setLoadingReports(true);
         try {
             const data = await getAllLocalReports();
-            // Sort by updatedAt descending (newest first)
             const sorted = data.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
             setReports(sorted);
         } catch (e) {
@@ -128,6 +94,28 @@ const App: React.FC = () => {
         } finally {
             setLoadingReports(false);
         }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) {
+                console.error('Google login error:', error);
+                alert('Failed to sign in with Google: ' + error.message);
+            }
+        } catch (err) {
+            console.error('OAuth error:', err);
+        }
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
     };
 
     const handleDemoLogin = () => {
@@ -162,7 +150,6 @@ const App: React.FC = () => {
                 mime = 'text/markdown';
                 ext = 'md';
             } else {
-                // remove private sync state
                 const { _syncState, ...clean } = report;
                 content = JSON.stringify(clean, null, 2);
                 mime = 'application/json';
@@ -187,13 +174,10 @@ const App: React.FC = () => {
     const handleGenerateTestReport = async () => {
         setGenerating(true);
         try {
-            // 1. Fetch AI Content
             const aiData = await generateEdgeCaseReportContent();
-            
-            // 2. Fetch a random customer to attach
             const customers = await fetchCustomerDirectory();
-            const randomCustomer: Customer = customers[0] || { 
-                id: 'mock', 
+            const randomCustomer: Customer = customers[0] || {
+                id: 'mock',
                 companyName: 'Mock Corp',
                 contactPerson: 'Mock Contact',
                 position: 'Manager',
@@ -201,10 +185,9 @@ const App: React.FC = () => {
                 phone: '555-0123'
             };
 
-            // 3. Construct full report object
             const newId = generateUUID();
             const now = new Date().toISOString();
-            
+
             const newReport: ServiceReport = {
                 id: newId,
                 status: 'DRAFT',
@@ -218,7 +201,7 @@ const App: React.FC = () => {
                 customer: randomCustomer,
                 machine: aiData.machine || { serialNumber: 'UNK', modelNumber: 'UNK', machineType: 'UNK', controllerType: 'UNK', softwareVersion: '' },
                 summary: aiData.summary || "Auto-generated stress test report.",
-                attachments: [], // Start empty, could generate mock attachments if needed
+                attachments: [],
                 parts: [],
                 followUpRequired: true,
                 designSuggestion: { current: '', problem: '', change: '' },
@@ -248,7 +231,6 @@ const App: React.FC = () => {
                 _syncState: { lastSaved: now, dirty: true, uploadQueue: [], version: 1, isOffline: false }
             };
 
-            // 4. Save and Open
             await saveLocalReport(newReport);
             setCurrentReportId(newId);
             setView('editor');
@@ -261,6 +243,18 @@ const App: React.FC = () => {
         }
     };
 
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-slate-950">
+                <div className="text-center">
+                    <i className="fa-solid fa-circle-notch fa-spin text-red-500 text-3xl mb-4"></i>
+                    <p className="text-slate-400">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (!user) {
         return (
             <div className="h-screen flex items-center justify-center bg-slate-950 p-4">
@@ -271,23 +265,27 @@ const App: React.FC = () => {
 
                     {!showManualLogin ? (
                         <>
-                            {/* Google Sign In Container */}
-                            <div className="flex justify-center mb-4 min-h-[40px] relative">
-                                {!scriptLoaded && (
-                                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">
-                                        <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Loading Auth...
-                                    </div>
-                                )}
-                                <div id="googleSignInBtn"></div>
-                            </div>
+                            {/* Supabase Google Sign In */}
+                            <button
+                                onClick={handleGoogleLogin}
+                                className="w-full bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg shadow-sm hover:bg-gray-100 flex items-center justify-center gap-3 transition-colors border border-gray-300"
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                Sign in with Google
+                            </button>
 
-                            <div className="relative flex py-2 items-center">
+                            <div className="relative flex py-4 items-center">
                                 <div className="flex-grow border-t border-slate-700"></div>
                                 <span className="flex-shrink-0 mx-4 text-slate-500 text-xs uppercase">Or</span>
                                 <div className="flex-grow border-t border-slate-700"></div>
                             </div>
 
-                            <button onClick={handleDemoLogin} className="w-full bg-slate-800 border border-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-lg shadow-sm hover:bg-slate-700 hover:border-slate-600 flex items-center justify-center gap-2 mt-2 text-sm transition-colors">
+                            <button onClick={handleDemoLogin} className="w-full bg-slate-800 border border-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-lg shadow-sm hover:bg-slate-700 hover:border-slate-600 flex items-center justify-center gap-2 text-sm transition-colors">
                                 <i className="fa-solid fa-user-ninja"></i>
                                 Demo Account
                             </button>
@@ -337,32 +335,6 @@ const App: React.FC = () => {
                             </button>
                         </form>
                     )}
-
-                    {/* Config Toggle */}
-                    <div className="mt-8 pt-4 border-t border-slate-800">
-                        <button
-                            onClick={() => setShowAuthConfig(!showAuthConfig)}
-                            className="text-xs text-slate-500 hover:text-slate-300 flex items-center justify-center w-full"
-                        >
-                            <i className="fa-solid fa-gear mr-1"></i>
-                            {showAuthConfig ? 'Hide Configuration' : 'Configuration'}
-                        </button>
-
-                        {showAuthConfig && (
-                            <div className="mt-3 text-left">
-                                <label className="block text-xs font-bold text-slate-400 mb-1">Google Client ID</label>
-                                <input
-                                    type="text"
-                                    value={clientId}
-                                    onChange={(e) => setClientId(e.target.value)}
-                                    className="w-full text-xs bg-slate-800 border border-slate-700 rounded p-2 text-slate-300 break-all"
-                                />
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                    Error 401/Origin? Use Manual Login above or add this URL to Google Console.
-                                </p>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
         );
@@ -370,21 +342,21 @@ const App: React.FC = () => {
 
     if (view === 'editor') {
         return (
-            <ReportEditor 
+            <ReportEditor
                 reportId={currentReportId}
-                userEmail={user.email} 
-                userName={user.name} 
+                userEmail={user.email}
+                userName={user.name}
                 onClose={() => {
                     setView('list');
                     setCurrentReportId(undefined);
-                    loadReports(); // Refresh list on return
-                }} 
+                    loadReports();
+                }}
             />
         );
     }
 
     return (
-        <Layout user={user} onLogout={() => setUser(null)} title="Dashboard" actions={
+        <Layout user={user} onLogout={handleLogout} title="Dashboard" actions={
             <button onClick={() => { setCurrentReportId(undefined); setView('editor'); }} className="bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow hover:bg-green-500 transition-colors flex items-center gap-1.5">
                 <i className="fa-solid fa-plus"></i>
                 <span>New Report</span>
