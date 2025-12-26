@@ -8,7 +8,7 @@ import { generateEdgeCaseReportContent } from './services/geminiService';
 import { fetchCustomerDirectory } from './services/workDriveService';
 import { generateUUID } from './utils/helpers';
 import { generateHTML, generateMarkdown } from './utils/exportUtils';
-import { supabase, getUserProfile } from './src/lib/supabase';
+import { supabase } from './src/lib/supabase';
 
 // Mock Auth for Fallback
 const MOCK_USER: User = {
@@ -38,14 +38,14 @@ const App: React.FC = () => {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
-                    // Get profile with role from our profiles table
-                    const profile = await getUserProfile(session.user.id);
+                    // Get role from app_metadata (set by admin)
+                    const appRole = session.user.app_metadata?.role;
 
                     setUser({
                         email: session.user.email || '',
-                        name: profile?.name || session.user.user_metadata?.full_name || session.user.email || '',
-                        picture: session.user.user_metadata?.avatar_url,
-                        role: (profile?.role?.toUpperCase() as 'ADMIN' | 'USER' | 'SUPER_ADMIN') || 'USER'
+                        name: session.user.user_metadata?.full_name || session.user.email || '',
+                        picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+                        role: appRole === 'admin' ? 'ADMIN' : 'USER'
                     });
                 }
             } catch (error) {
@@ -60,13 +60,13 @@ const App: React.FC = () => {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
-                const profile = await getUserProfile(session.user.id);
+                const appRole = session.user.app_metadata?.role;
 
                 setUser({
                     email: session.user.email || '',
-                    name: profile?.name || session.user.user_metadata?.full_name || session.user.email || '',
-                    picture: session.user.user_metadata?.avatar_url,
-                    role: (profile?.role?.toUpperCase() as 'ADMIN' | 'USER' | 'SUPER_ADMIN') || 'USER'
+                    name: session.user.user_metadata?.full_name || session.user.email || '',
+                    picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+                    role: appRole === 'admin' ? 'ADMIN' : 'USER'
                 });
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
